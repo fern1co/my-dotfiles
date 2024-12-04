@@ -21,15 +21,17 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       flake = {
         darwinConfigurations = {
-          aarch64 = mkDarwin { system = "aarch64-darwin"; };
-          x86_64 = mkDarwin { system = "x86_64-darwin"; };
+          aarch64 = self.lib.mkDarwin { system = "aarch64-darwin"; };
+          x86_64 = self.lib.mkDarwin { system = "x86_64-darwin"; };
         };
 
-        lib = import ./lib { inherit inputs; };
 
         nixosConfigurations = {
-          x86_64 = mkNixos { system = "x86_64-linux"; };
+          x86_64 = self.lib.mkNixos { system = "x86_64-linux"; };
         };
+
+
+        lib = import ./lib { inherit inputs; };
       };
 
       systems = [ "aarch64-darwin" "aarch64-linux" "x86-64-darwin" "x86-64-linux" ];

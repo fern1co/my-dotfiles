@@ -2,12 +2,11 @@
 let
   defaultGit = {
   };
-  defaultUserName = "fernando.carbajal";
-  homeManagerNixos = import ./nixos/home-manager.nix { inherit inputs; };
-  homeManagerShared = import ./shared/home-manager.nix { inherit inputs; };
+  defaultUserName = "fernando-carbajal";
+  homeManagerShared = import ./shared/home-manager.nix { inherit inputs;};
 in
 {
-mkDarwin = { username ? defaultUserName }: { system }:
+mkDarwin = { username ? defaultUserName, system }:
   inputs.nix-darwin.lib.darwinSystem {
     inherit system;
     modules = [
@@ -17,28 +16,26 @@ mkDarwin = { username ? defaultUserName }: { system }:
           home-manager.useUserPackages = true;
           home-manager.users.${username} = { pkgs, ... }: {
             imports = [
-              homeManagerShared
+              homeManagerShared {}
             ];
             # home.file."Library/Application Support/k9s/skin.yml".source = ../config/k9s/skin.yml;
           };
         }
     ];
   };
-mkNixos = { username ? defaultUserName } : { system }:
+mkNixos = { username ? defaultUserName, system }:
   inputs.nixpkgs.lib.nixosSystem {
     inherit system;
     modules = [
-      (import ./nixos/hardware/${system}.nix)
-        (import ./nixos/configuration.nix { inherit username; })
-        (import ./nixos/configuration-desktop.nix {inherit username; })
+        (import ./nixos/configuration.nix { inherit inputs username; })
 
-        inputs.home-manager.nixosModules.home-manager 
+        inputs.home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.users."${username}" = { pkgs, ... }: {
             imports = [
-              (homeManagerNixos {})
+              (import ./nixos/home-manager.nix)
                 (homeManagerShared {})
             ];
           };

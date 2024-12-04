@@ -8,5 +8,8 @@ in {
   programs.zsh.enable = true;
   services.nix-daemon.enable = true;
   system.stateVersion = 4;
-  users.users.${username}.home = "/Users/${username}";
+  users.users.${username}-u = {
+    isNormalUser = true;
+    home = "/Users/${username}";
+  };
 }

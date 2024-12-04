@@ -1,4 +1,4 @@
-{ inputs }: { pkgs, lib, config, ...}:
+{ inputs }:{}:{ pkgs, ...}:
 let isDarwin = system == "aarch64-darwin" || system == "x86_64-darwin";
 system = pkgs.system;
 dotnet = (with pkgs.dotnetCorePackages; combinePackages [
