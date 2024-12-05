@@ -1,4 +1,4 @@
-{ inputs }:{}:{ pkgs, ...}:
+{ inputs }:{git}:{ pkgs, ...}:
 let isDarwin = system == "aarch64-darwin" || system == "x86_64-darwin";
 system = pkgs.system;
 dotnet = (with pkgs.dotnetCorePackages; combinePackages [
@@ -11,8 +11,8 @@ in {
    	#../../modules/nvim
   #];
   home.packages = with pkgs; [
-    vim fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
-    lens google-cloud-sdk pulumi-bin go cargo kind
+    fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
+    lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome
     (pkgs.nerdfonts.override { fonts = [ "Hack" ]; })
     dotnet 
 
@@ -74,9 +74,11 @@ in {
     nix-direnv.enable = true;
   };
 
-  programs.git = {
-    enable = true;
-  };
+  programs.git =
+    pkgs.lib.recursiveUpdate git
+    {
+      enable = true;
+    };
 
   programs.lazygit = {
     enable = true;

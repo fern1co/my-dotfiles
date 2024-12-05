@@ -1,12 +1,18 @@
 { inputs }:
 let
   defaultGit = {
+    userEmail = "139995236+fern1co@users.noreply.github.com";
+    userName = "FerCarbajal";
   };
   defaultUserName = "fernando-carbajal";
   homeManagerShared = import ./shared/home-manager.nix { inherit inputs;};
 in
 {
-mkDarwin = { username ? defaultUserName, system }:
+mkDarwin = {
+    git ? defaultGit,
+    username ? defaultUserName,
+    system
+  }:
   inputs.nix-darwin.lib.darwinSystem {
     inherit system;
     modules = [
@@ -16,14 +22,18 @@ mkDarwin = { username ? defaultUserName, system }:
           home-manager.useUserPackages = true;
           home-manager.users.${username} = { pkgs, ... }: {
             imports = [
-              homeManagerShared {}
+              homeManagerShared {inherit git;}
             ];
             # home.file."Library/Application Support/k9s/skin.yml".source = ../config/k9s/skin.yml;
           };
         }
     ];
   };
-mkNixos = { username ? defaultUserName, system }:
+mkNixos = {
+    git ? defaultGit,
+    username ? defaultUserName,
+    system,
+  }:
   inputs.nixpkgs.lib.nixosSystem {
     inherit system;
     modules = [
@@ -36,7 +46,7 @@ mkNixos = { username ? defaultUserName, system }:
           home-manager.users."${username}" = { pkgs, ... }: {
             imports = [
               (import ./nixos/home-manager.nix)
-                (homeManagerShared {})
+                (homeManagerShared {inherit git;})
             ];
           };
         }

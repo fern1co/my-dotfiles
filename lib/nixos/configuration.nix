@@ -36,14 +36,14 @@ let
 
   # Select internationalisation properties.
   i18n.defaultLocale = "es_US.UTF-8";
-  # console = {
+  console = {
   #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
+     keyMap = "es";
   #   useXkbConfig = true; # use xkb.options in tty.
-  # };
+  };
 
   # Enable the X11 windowing system.
-  # services.xserver.enable = true;
+  services.xserver.enable = true;
 
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];  
@@ -51,14 +51,14 @@ let
   nixpkgs.config.allowUnfree = true;
 
   # Configure keymap in X11
-  # services.xserver.xkb.layout = "us";
+  services.xserver.xkb.layout = "es";
   # services.xserver.xkb.options = "eurosign:e,caps:escape";
 
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
   # Enable sound.
-  hardware.pulseaudio.enable = true;
+  # hardware.pulseaudio.enable = true;
   # OR
   # services.pipewire = {
   #   enable = true;
@@ -79,6 +79,8 @@ let
   users.users.${username} = {
     isNormalUser = true;
     home = "/home/${username}";
+    extraGroups = [ "wheel" ];
+    shell = pkgs.zsh;
   };
 
   # programs.firefox.enable = true;
@@ -89,20 +91,38 @@ let
     neovim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     git
+    swww
+    dunst
+    catppuccin
+    seclists
+    waybar
+    rofi-wayland
+    wofi
+    socat
+    openvpn
+    unzip
+    nnn
+    openssl
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+  };
+  programs.hyprland.enable = true;
+  programs.zsh.enable = true;
 
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+  services.openssh.enable = true;
+
+  services.openvpn.servers = {
+    n1co-dev-hubVPN = { config = '' config /home/fernando-carbajal/vpn_configs/vpnconfig.ovpn ''; };
+  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
