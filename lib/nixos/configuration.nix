@@ -8,7 +8,11 @@ let
     [ # Include the results of the hardware scan.
       ./hardware/x86_64-linux.nix
     ];
-
+  console = {
+    earlySetup = true;
+    font = "${pkgs.terminus_font}/share/consolefonts/ter-v32n.psf.gz";
+  };
+  hardware.bluetooth.enable = true;
   # Use the systemd-boot EFI boot loader.
 #  boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -19,16 +23,36 @@ let
 
   # networking.hostName = "nixos"; # Define your hostname.
   # Pick only one of the below networking options.
-  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-  networking.wireless.networks = {
-   "CARSAG" = {
-     psk = "ferockwifistation";
-   };
-  };
+  networking.networkmanager.enable = true;
+  networking.nameservers = [ "8.8.8.8" "4.4.4.4" ];
+  # networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
+
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   # Set your time zone.
   time.timeZone = "America/Tegucigalpa";
+  fonts.fontDir.enable = true;
+  fonts.fontconfig = {
+    enable = true;
+    antialias = true;
+
+    hinting = {
+      enable = true;
+      autohint = false;
+      style = "full";
+    };
+
+    subpixel = {
+      lcdfilter = "default";
+      rgba = "rgb";
+    };
+
+    defaultFonts = {
+      monospace = ["Hack Nerd Font Mono"];
+      sansSerif = ["FiraCode Nerd Font" "Hack Nerd Font"];
+      serif = ["Noto Serif" "Noto Color Emoji"];
+    };
+  };
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -41,37 +65,22 @@ let
      keyMap = "es";
   #   useXkbConfig = true; # use xkb.options in tty.
   };
-
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
+ 
+  xdg.portal = {
+    enable = true;
+    xdgOpenUsePortal = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];  
 
   nixpkgs.config.allowUnfree = true;
 
-  # Configure keymap in X11
-  services.xserver.xkb.layout = "es";
-  # services.xserver.xkb.options = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable sound.
-  # hardware.pulseaudio.enable = true;
-  # OR
-  # services.pipewire = {
-  #   enable = true;
-  #   pulse.enable = true;
-  # };
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  services.libinput.enable = true;
-
+  
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.f3rn1co = {
      isNormalUser = true;
-     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+     extraGroups = [ "wheel" "docker" ]; # Enable ‘sudo’ for the user.
      packages = with pkgs; [
        tree
      ];
@@ -79,7 +88,7 @@ let
   users.users.${username} = {
     isNormalUser = true;
     home = "/home/${username}";
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "docker"];
     shell = pkgs.zsh;
   };
 
@@ -92,18 +101,50 @@ let
     wget
     git
     swww
-    dunst
     catppuccin
     seclists
     waybar
     rofi-wayland
-    wofi
     socat
     openvpn
     unzip
     nnn
     openssl
+    hyprshade
+    hypridle
+    hyprlock
+    hyprsunset
+    parallel
+    playerctl
+    wlogout
+    envsubst
+    pavucontrol
+    hyprpolkitagent
+    swaynotificationcenter
+    swappy
+    wl-clipboard
+    nodejs_22
+    act
+    discord
+    brave
+    bmon
+    inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins
+    tmux
+    grimblast
+    fontconfig
+    hyprsome
+    overskride
+    networkmanager_dmenu
+    notion-app-enhanced
+    azuredatastudio
+    noto-fonts
+    corefonts
   ];
+
+  environment.sessionVariables.NIXOS_OZONE_WL="1";
+  environment.localBinInPath = true;
+
+  virtualisation.docker.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -112,16 +153,42 @@ let
     enable = true;
     enableSSHSupport = true;
   };
+  programs.light.enable = true;
+  programs.light.brightnessKeys.enable = true;
+
+
   programs.hyprland.enable = true;
+  programs.hyprland.xwayland.enable = true; 
   programs.zsh.enable = true;
 
   # List services that you want to enable:
+  # Enable the X11 windowing system.
+  services.xserver.enable = true;
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+  # Configure keymap in X11
+  services.xserver.xkb.layout = "es";
+  # services.xserver.xkb.options = "eurosign:e,caps:escape";
+
+  # Enable CUPS to print documents.
+  # services.printing.enable = true;
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  services.libinput.enable = true;
+  services.blueman.enable = false;
+
+  services.actkbd.enable = true;
+  services.fprintd.enable = true;
+  services.fprintd.tod.enable = true;
+  services.fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
+  services.avahi.enable = true;
 
   services.openvpn.servers = {
-    n1co-dev-hubVPN = { config = '' config /home/fernando-carbajal/vpn_configs/vpnconfig.ovpn ''; };
+    n1co-dev-hubVPN = { config = '' config /home/fernando-carbajal/vpn_configs/vpnconfig.ovpn ''; autoStart = false; };
+    n1co-dev-main-hubVPN = { config = '' config /home/fernando-carbajal/vpn_configs/vpnconfig-dev-main.ovpn ''; autoStart = false; };
+    n1co-prod-main-hubVPN = { config = '' config /home/fernando-carbajal/vpn_configs/vpnconfig-prod-main.ovpn ''; autoStart = false; };
+    n1co-prod-core-cross-hubVPN = { config = '' config /home/fernando-carbajal/vpn_configs/vpnconfig-prod-core-cross.ovpn ''; autoStart = false; };
   };
 
   # Open ports in the firewall.
@@ -153,6 +220,5 @@ let
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
   system.stateVersion = "24.11"; # Did you read the comment?
-
 }
 
