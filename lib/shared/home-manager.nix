@@ -31,6 +31,7 @@ in {
     "vim" = "nvim";
     "n" = "nvim";
     "ls" = "lsd";
+    "cat" = "bat";
     "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
   };
   programs.neovim.enable = true;
@@ -52,18 +53,6 @@ in {
 
   programs.bat = {
     enable = true;
-    config = { theme = "catppuccin"; };
-    themes = {
-        catppuccin = {
-          src = pkgs.fetchFromGitHub {
-            owner = "catppuccin";
-            repo = "bat";
-            rev = "ba4d16880d63e656acced2b7d4e034e4a93f74b1";
-            sha256 = "sha256-6WVKQErGdaqb++oaXnY3i6/GuH2FhTgK0v4TN4Y0Wbw=";
-        };
-        file = "Catppuccin-macchiato.tmTheme";
-      };
-    };
   };
 
   programs.bottom.enable = true;
@@ -82,20 +71,6 @@ in {
 
   programs.lazygit = {
     enable = true;
-    settings.gui = {
-      theme = {
-        activeBorderColor = ["#89dceb" "bold"];
-        inactiveBorderColor = ["#a6adc8"];
-        optionsTextColor = ["#89b4fa"];
-        selectedLineBgColor  = ["#313244"];
-        selectedRangeBgColor = ["#313244"];
-        cherryPickedCommitBgColor = ["#45475a"];
-        cherryPickedCommitFgColor = ["#89dceb"];
-        unstagedChangesColor =["#f38ba8"];
-        defaultFgColor =["#cdd6f4"];
-        searchingActiveBorderColor =["#f9e2af"];
-      };
-    };
   };
 
   programs.fzf = {

@@ -45,6 +45,8 @@ mkNixos = {
           home-manager.useUserPackages = true;
           home-manager.users."${username}" = { pkgs, ... }: {
             imports = [
+              inputs.catppuccin.homeManagerModules.catppuccin
+              inputs.anyrun.homeManagerModules.anyrun
               (import ./nixos/home-manager.nix)
                 (homeManagerShared {inherit git;})
             ];

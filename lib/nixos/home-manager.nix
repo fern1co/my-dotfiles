@@ -1,9 +1,86 @@
 {pkgs, ...}:
 {
+    gtk.catppuccin.enable = true;
+    gtk.catppuccin.flavor = "mocha";
+    gtk.catppuccin.icon.enable = true;
+    
+    catppuccin.flavor = "mocha";
+    programs.k9s.catppuccin.enable = true;
+    programs.k9s.catppuccin.transparent = true;
+    programs.lazygit.catppuccin.enable = true;
+    programs.lazygit.catppuccin.accent = "mauve";
+    programs.zsh.syntaxHighlighting.catppuccin.enable = true;
+
+
     programs.gpg.enable = true;
     programs.chromium.enable = true;
     programs.hyprlock.enable = true;
+    programs.hyprlock.catppuccin.enable = true;
+    programs.hyprlock.settings = {
+      general = {
+        ignore_empty_input = true;
+        enable_fingerprint = true;
+        disable_loading_bar = true;
+        grace = 0;
+      };
+      background = {
+        path = "screenshot"; #"$HOME/backgrounds/Space-Nebula.png";
+        blur_passes = 1;
+        color = "@base";
+      };
+      label = [
+        {
+          text = "cmd[update:1000] echo $(date +%-I:%M%p);";
+          color = "$text";
+          font_size = 120;
+          font_family = "FiraCode Nerd Font Mono";
+          position = "0, -150";
+          valign = "top";
+          halign = "center";
+        }
+        {
+          text = ''cmd[update:1000] echo "<span>$(date '+%A, %d %B')</span>'';
+          color = "$text";
+          font_size = 30;
+          font_family = "FiraCode Nerd Font Mono";
+          position = "0, 200";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "Hello, $USER";
+          font_size = 25;
+          font_family = "FiraCode Nerd Font Mono";
+          position = "0, -70";
+          halign = "center";
+          valign = "center";
+        }
+      ];
+      input-field = [{
+        size = "290, 60";
+        outline_thickness = 4;
+        dots_size = "0.2";
+        dots_spacing = "0.2";
+        dots_center = true;
+        font_family = "FiraCode Nerd Font Mono";
+        outer_color = "$mauve";
+        inner_color = "$surface0";
+        font_color = "$text";
+        fade_on_empty= false;
+        placeholder_text = "<span foreground='##$mauveAlpha'><i>󰌾 Logged in  </i></span>";
+        hide_input = false;
+        check_color = "$mauveAlpha";
+        fail_color = "$red";
+        fail_text = "<i>$FAIL <b>($ATTEMPTS)</b></i>";
+        capslock_color = "$yellow";
+        position = "0, -140";
+        halign = "center";
+        valign = "center";
+      }];
+    };
+
     programs.tmux = {
+      catppuccin.enable = true;
       prefix = "C-a";
       enable = true;
       mouse = true;

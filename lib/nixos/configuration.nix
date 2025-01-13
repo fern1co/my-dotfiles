@@ -9,6 +9,7 @@ let
       ./hardware/x86_64-linux.nix
     ];
   console = {
+    keyMap = "la-latin1";
     earlySetup = true;
     font = "${pkgs.terminus_font}/share/consolefonts/ter-v32n.psf.gz";
   };
@@ -60,11 +61,6 @@ let
 
   # Select internationalisation properties.
   i18n.defaultLocale = "es_US.UTF-8";
-  console = {
-  #   font = "Lat2-Terminus16";
-     keyMap = "es";
-  #   useXkbConfig = true; # use xkb.options in tty.
-  };
  
   xdg.portal = {
     enable = true;
@@ -139,6 +135,18 @@ let
     azuredatastudio
     noto-fonts
     corefonts
+    timewarrior
+    taskwarrior3
+    kbd
+    cmake
+    meson
+    cpio
+    gcc
+    gnumake
+    nwg-look
+    nh
+    catppuccin-gtk
+    trivy
   ];
 
   environment.sessionVariables.NIXOS_OZONE_WL="1";
@@ -149,6 +157,12 @@ let
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
+  programs.nh = {
+    enable = true;
+    clean.enable = true;
+    clean.extraArgs = "--keep-since 4d --keep 3";
+    flake = "/home/fernando-carbajal/my-dotfiles/";
+  };
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
@@ -168,7 +182,8 @@ let
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
   # Configure keymap in X11
-  services.xserver.xkb.layout = "es";
+  services.xserver.xkb.layout = "latam";
+  # services.xserver.xkb.variant = "latam";
   # services.xserver.xkb.options = "eurosign:e,caps:escape";
 
   # Enable CUPS to print documents.
