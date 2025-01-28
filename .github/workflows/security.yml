@@ -44,14 +44,9 @@ jobs:
           name: my-nix-cache
           use-flake: true
 
-      - name: Install Nix Tools
+      - name: Install and Run Nix Tools
         run: |
-          nix-env -i nixpkgs.nixpkgs-fmt nixpkgs.nixpkgs-lint
-      
-      # Formatea archivos Nix
-      - name: Format Nix Files
-        run: nixpkgs-fmt ./**/*.nix
-
-      # Linter para archivos Nix
-      - name: Run Nix Linter
-        run: nix-linter ./**/*.nix
+          nix shell nixpkgs#nixpkgs-fmt nixpkgs#nix-linter -c sh -c "
+            nixpkgs-fmt ./**/*.nix
+            nix-linter ./**/*.nix
+          "
