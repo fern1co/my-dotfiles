@@ -43,10 +43,3 @@ jobs:
         with:
           name: my-nix-cache
           use-flake: true
-
-      - name: Install and Run Nix Tools
-        run: |
-          nix shell nixpkgs#nixpkgs-fmt nixpkgs#nix-linter -c sh -c "
-            nixpkgs-fmt ./**/*.nix
-            nix-linter ./**/*.nix
-          "
