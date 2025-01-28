@@ -46,7 +46,7 @@ jobs:
 
       - name: Install Nix Tools
         run: |
-          nix-env -i nixpkgs-fmt nixpkgs-lint
+          nix-env -i nixpkgs.nixpkgs-fmt nixpkgs.nixpkgs-lint
       
       # Formatea archivos Nix
       - name: Format Nix Files
