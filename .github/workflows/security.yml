@@ -1,0 +1,53 @@
+name: Security Scan and Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Escanea en busca de vulnerabilidades
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@v0.12.0
+        with:
+          scan-type: fs
+          exit-code: 1
+          severity: CRITICAL,HIGH
+
+  lint-nixos:
+    name: Lint Nix Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Configura caché de Nix para evitar descargar dependencias repetidamente
+      - name: Setup Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Cache Nix Store
+        uses: cachix/cachix-action@v10
+        with:
+          name: my-nix-cache
+          use-flake: true
+
+      # Formatea archivos Nix
+      - name: Format Nix Files
+        run: nixpkgs-fmt ./**/*.nix
+
+      # Linter para archivos Nix
+      - name: Run Nix Linter
+        run: nix-linter ./**/*.nix
