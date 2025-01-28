@@ -32,7 +32,14 @@
 
 
         nixosConfigurations = {
-          x86_64 = self.lib.mkNixos { system = "x86_64-linux"; };
+          n1co = self.lib.mkNixos { 
+              system = "x86_64-linux";
+              configPath = ./lib/nixos/n1co-work/configuration.nix;
+          };
+          home_laptop = self.lib.mkNixos { 
+              system = "x86_64-linux";
+              configPath = ./lib/nixos/home-laptop/configuration.nix;
+          };
         };
 
 

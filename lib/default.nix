@@ -33,11 +33,12 @@ mkNixos = {
     git ? defaultGit,
     username ? defaultUserName,
     system,
+    configPath,
   }:
   inputs.nixpkgs.lib.nixosSystem {
     inherit system;
     modules = [
-        (import ./nixos/configuration.nix { inherit inputs username; })
+        (import configPath { inherit inputs username; })
 
         inputs.home-manager.nixosModules.home-manager
         {
