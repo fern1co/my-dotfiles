@@ -216,9 +216,49 @@ let
   services.fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
   services.avahi.enable = true;
 
+  services.adguardhome = {
+    enable = true;
+    port = 8081;
+    mutableSettings = true;
+    allowDHCP = true;
+    settings = {
+      http = {
+        # You can select any ip and port, just make sure to open firewalls where needed
+        address = "0.0.0.0:8081";
+      };
+      dns = {
+        upstream_dns = [
+          # Example config with quad9
+          "8.8.8.8:53"
+          "1.1.1.1:53"
+          # Uncomment the following to use a local DNS service (e.g. Unbound)
+          # Additionally replace the address & port as needed
+          # "127.0.0.1:5335"
+        ];
+      };
+      filtering = {
+        protection_enabled = true;
+        filtering_enabled = true;
+
+        parental_enabled = false;  # Parental control-based DNS requests filtering.
+        safe_search = {
+          enabled = false;  # Enforcing "Safe search" option for search engines, when possible.
+        };
+      };
+      # The following notation uses map
+      # to not have to manually create {enabled = true; url = "";} for every filter
+      # This is, however, fully optional
+      filters = map(url: { enabled = true; url = url; }) [
+        "https://adguardteam.github.io/HostlistsRegistry/assets/filter_9.txt"  # The Big List of Hacked Malware Web Sites
+        "https://adguardteam.github.io/HostlistsRegistry/assets/filter_11.txt"  # malicious url blocklist
+      ];
+    };
+  };
+
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [ 53 853 443 8081 ];
+  networking.firewall.allowedUDPPorts = [ 53 67 68 853 546 547 ];
+ 
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
