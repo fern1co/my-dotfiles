@@ -105,9 +105,11 @@ let
   users.users.${username} = {
     isNormalUser = true;
     home = "/home/${username}";
-    extraGroups = [ "wheel" "docker"];
+    extraGroups = [ "wheel" "docker" "video"];
     shell = pkgs.zsh;
   };
+
+  users.extraGroups.video.members = ["frigate"  "${username}" ];
   # programs.firefox.enable = true;
 
   # List packages installed in system profile. To search, run:
@@ -167,6 +169,10 @@ let
     nh
     catppuccin-gtk
     trivy
+    cheese
+    mosquitto
+    bc
+    memos
   ];
 
   environment.sessionVariables.NIXOS_OZONE_WL="1";
@@ -255,8 +261,119 @@ let
     };
   };
 
+  services.go2rtc = {
+    enable = true;
+    settings = {
+      streams = {
+          cam2 = "onvif://admin:kr4m3r072025@192.168.100.4:5000";
+        };
+    };
+  };
+
+  services.frigate = {
+    enable = true;
+    hostname = "homec.local";
+    settings= {
+        cameras = {
+          frontcam = {
+              ffmpeg = {
+                inputs = [{
+                    path = "rtsp://127.0.0.1:8554/cam2";
+                    input_args = "preset-rtsp-restream";
+                    roles = [ "record" "detect" ];
+                  }];
+              };
+              detect = {
+                  enabled = true;
+                  width = 1280;
+                  height = 720;
+                  fps = 5;
+              };
+              live = {
+                stream_name = "cam2";
+              };
+              # zones = {
+              #   test_zone = {
+              #   };
+              # };
+            };
+          };
+      };
+  };
+
+  systemd.services.frigate = {
+      serviceConfig = {
+          SupplementaryGroups = [ "video" ];
+    };
+  };
+
+  services.home-assistant = {
+      enable = true;
+      config = null;
+      configWritable = true;
+      # configDir = "/etc/home-assistant/";
+      extraComponents = [
+        "isal"
+        "esphome"
+        "met"
+        "radio_browser"
+        "adguard"
+        "device_tracker"
+        "lg_thinq"
+        "stream"
+        "default_config"
+        "androidtv_remote"
+        "cast"
+        "google_translate"
+        "ibeacon"
+        "bluetooth"
+        "bluetooth_adapters"
+        "bluetooth_tracker"
+        "webostv"
+        "ipp"
+        "nmap_tracker"
+        "local_todo"
+        "manual_mqtt"
+        "apple_tv"
+        "mqtt"
+        "google"
+        "google_cloud"
+        "workday"
+        "wyoming"
+        "piper"
+        "mealie"
+        "tailscale"
+      ];
+  };
+
+
+  services.wyoming.piper.servers = {
+    principal = {
+      enable = true;
+      uri = "tcp://0.0.0.0:10200";
+      voice = "en_US-arctic-medium";
+      speaker = 2;
+    };
+    principal2 = {
+      enable = true;
+      uri = "tcp://0.0.0.0:10201";
+      voice = "en_US-amy-medium";
+    };
+  };
+
+  services.mealie = {
+    enable = true;
+    port = 8083;
+  };
+
+  services.tailscale = {
+    enable = true;
+    openFirewall = true;
+    authKeyFile = "/home/${username}/tailscale_key";
+  };
+
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 53 853 443 8081 ];
+  networking.firewall.allowedTCPPorts = [ 53 853 443 8081 8123 80 8080 8083 8084 8085 ];
   networking.firewall.allowedUDPPorts = [ 53 67 68 853 546 547 ];
  
   # Or disable the firewall altogether.
