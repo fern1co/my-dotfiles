@@ -14,8 +14,6 @@ in {
     fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
     lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome
     dotnet 
-
-    # csharp-ls
   ];
 
   home.sessionVariables = {
@@ -32,6 +30,7 @@ in {
     "ls" = "lsd";
     "cat" = "bat";
     "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
+    "k9c" = "kubectl config get-contexts -o name | fzf | xargs -r k9s --context";
   };
   programs.neovim.enable = true;
   
