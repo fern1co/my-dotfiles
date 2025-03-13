@@ -10,19 +10,21 @@ in
 {
 mkDarwin = {
     git ? defaultGit,
-    username ? defaultUserName,
-    system
+    username ? "fernando.carbajal",
+    system,
+    configPath,
   }:
   inputs.nix-darwin.lib.darwinSystem {
     inherit system;
     modules = [
-      	(import ./darwin/configuration.nix { inherit username; })
+        (import configPath { inherit inputs username; })
         inputs.home-manager.darwinModules.home-manager {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.users.${username} = { pkgs, ... }: {
             imports = [
-              homeManagerShared {inherit git;}
+                inputs.catppuccin.homeManagerModules.catppuccin
+                (homeManagerShared {inherit git;})
             ];
             # home.file."Library/Application Support/k9s/skin.yml".source = ../config/k9s/skin.yml;
           };
