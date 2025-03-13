@@ -2,7 +2,7 @@
 let isDarwin = system == "aarch64-darwin" || system == "x86_64-darwin";
 system = pkgs.system;
 dotnet = (with pkgs.dotnetCorePackages; combinePackages [
-      sdk_6_0 sdk_7_0 sdk_8_0
+      sdk_8_0
     ]);
 
 in {
@@ -13,7 +13,6 @@ in {
   home.packages = with pkgs; [
     fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
     lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome
-    (pkgs.nerdfonts.override { fonts = [ "Hack" ]; })
     dotnet 
 
     # csharp-ls

@@ -19,9 +19,19 @@
     programs.hyprlock.settings = {
       general = {
         ignore_empty_input = true;
-        enable_fingerprint = true;
+        disable_input_if_command_fails = false;
         disable_loading_bar = true;
         grace = 0;
+      };
+      auth = {
+        pam = {
+          enable = true;
+        };
+        fingerprint = {
+          enable = true;
+          ready_message = "Place your finger on the sensor";
+          present_message = "scanning";
+        };
       };
       background = {
         path = "screenshot"; #"$HOME/backgrounds/Space-Nebula.png";
@@ -39,7 +49,7 @@
           halign = "center";
         }
         {
-          text = ''cmd[update:1000] echo "<span>$(date '+%A, %d %B')</span>'';
+          text = ''cmd[update:1000] echo "<span>$(date '+%A, %d %B')</span>"'';
           color = "$text";
           font_size = 30;
           font_family = "FiraCode Nerd Font Mono";
@@ -72,6 +82,7 @@
         check_color = "$mauveAlpha";
         fail_color = "$red";
         fail_text = "<i>$FAIL <b>($ATTEMPTS)</b></i>";
+        fail_timeout = 1000;
         capslock_color = "$yellow";
         position = "0, -140";
         halign = "center";
@@ -126,10 +137,10 @@
       pkgs.rofi-systemd
       pkgs.rofi-power-menu
 
-      (pkgs.nerdfonts.override { fonts = [ "Hack" "FiraCode" ]; })
     ]; 
 
     services.darkman.enable = true;
+
     fonts.fontconfig.enable = true;
 
     services.hypridle = {
