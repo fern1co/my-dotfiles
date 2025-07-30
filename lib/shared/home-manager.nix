@@ -31,7 +31,7 @@ in {
     "lg" = "lazygit";
     "vim" = "nvim";
     "n" = "nvim";
-    "ls" = "lsd";
+    #"ls" = "lsd";
     "cat" = "bat";
     "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
     "k9c" = "kubectl config get-contexts -o name | fzf | xargs -r k9s --context";
@@ -48,6 +48,7 @@ in {
   programs.zsh = {
     enable = true;
     enableCompletion = true;
+    enableVteIntegration = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
     oh-my-zsh = {
@@ -82,14 +83,33 @@ in {
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
+    tmux = {
+      enableShellIntegration = true;
+    };
   };
 
   programs.k9s = {
     enable = true;
-    settings = {
-      transparent = true;
-      shellPod = {
-        tty = false;
+    plugins = {
+      shell = {
+        shortCut = "Shift-V";
+        description = "Pod Shell";
+        scopes = [ "po" ];
+        command = "kubectl";
+        background = false;
+        args = [
+          "exec"
+          "-ti"
+          "-n"
+          "$NAMESPACE"
+          "--context"
+          "$CONTEXT"
+          "$NAME"
+          "--"
+          "sh"
+          "-c"
+          "'clear; (bash || ash || sh)'"
+        ];
       };
     };
   };

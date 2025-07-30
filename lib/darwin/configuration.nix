@@ -1,23 +1,29 @@
 { inputs, username }:{ pkgs, ... }:
 {
   nixpkgs.config.allowUnfree = true;
-  programs.zsh.enable = true;
+  # programs.zsh.enable = true;
   system.stateVersion = 5;
+  system.primaryUser = username;
   users.users.${username} = {
     # isNormalUser = true;
     home = "/Users/${username}";
-    shell = pkgs.zsh;
+    # shell = pkgs.zsh;
   };
   environment.systemPackages = with pkgs; [
         awscli
         aerospace
         skhd
-        pritunl-client
+    #pritunl-client
         sketchybar
         doppler
         ngrok
         tenv
         python310
+        cloudlens
+        e1s
+        bagels
+        llama-cpp
+        claude-code
         # terragrunt
   ];
 
@@ -51,6 +57,9 @@
                 alt-shift-k = "move down";
                 alt-shift-l = "move up";
                 alt-shift-semicolon = "move right";
+
+                alt-minus = "resize smart -50";
+                alt-equal = "resize smart +50";
 
                 alt-d = "join-with left";
                 alt-v = "join-with up";
@@ -86,13 +95,43 @@
 
                 alt-shift-c = "reload-config";
 
-                alt-r = "mode resize";
+                #alt-r = "mode resize";
 
-                alt-shift-enter = "mode apps";
+                # alt-shift-enter = "mode apps";
             };
+            exec-on-workspace-change = [
+              "/bin/bash"
+              "-c"
+              "sketchybar --trigger aerospace_workspace_change FOCUSED=$AEROSPACE_FOCUSED_WORKSPACE"
+            ];
         };
   };
 
   services.skhd.enable = true;
-  services.sketchybar.enable = true;
+  services.sketchybar = {
+    enable = true; 
+    # config = ''
+
+    #   sketchybar --bar position=top height=32 blur_radius=30 color=0xcc161616 y_offset=5 notch_display_height=35 margin=5 corner_radius=5
+    #   default=(
+    #     padding_left=5
+    #     padding_right=5
+    #     icon.font="Hack Nerd Font:Bold:17.0"
+    #     label.font="Hack Nerd Font:Bold:14.0"
+    #     icon.color=0xffffffff
+    #     label.color=0xffffffff
+    #     icon.padding_left=4
+    #     icon.padding_right=4
+    #     label.padding_left=4
+    #     label.padding_right=4
+    #   )
+    #   sketchybar --default ${default[@]}
+
+
+    #   sketchybar --add item logo left \
+    #             --set logo update_freq=10 icon="" icon.padding_right=15 icon.padding_left=15 background.height=45 background.corner_radius=10 label.drawing=off icon.font.size=24 padding_left=0 padding_right=16
+
+    #   sketchybar --add event aerospace_workspace_change
+    # ''
+  };
 }

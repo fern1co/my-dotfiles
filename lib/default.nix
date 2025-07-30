@@ -19,11 +19,13 @@ mkDarwin = {
     modules = [
         (import configPath { inherit inputs username; })
         inputs.home-manager.darwinModules.home-manager {
+
+          home-manager.backupFileExtension = "backup";
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.users.${username} = { pkgs, ... }: {
             imports = [
-                inputs.catppuccin.homeManagerModules.catppuccin
+                inputs.catppuccin.homeModules.catppuccin
                 (homeManagerShared {inherit git;})
             ];
             # home.file."Library/Application Support/k9s/skin.yml".source = ../config/k9s/skin.yml;
@@ -44,6 +46,7 @@ mkNixos = {
 
         inputs.home-manager.nixosModules.home-manager
         {
+          home-manager.backupFileExtension = "backup";
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.users."${username}" = { pkgs, ... }: {
