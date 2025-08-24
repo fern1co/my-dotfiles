@@ -76,6 +76,11 @@ in {
     pkgs.lib.recursiveUpdate git
     {
       enable = true;
+      userName = git.userName;
+      userEmail = git.userEmail;
+      extraConfig = {
+        credential.helper = "store";
+      };
     };
 
   programs.lazygit.enable = true; 
