@@ -8,6 +8,7 @@
     [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
+  hardware.graphics.enable = true;
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
@@ -39,9 +40,7 @@
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
   # networking.interfaces.enp0s31f6.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp1s0.useDHCP = lib.mkDefault true;
-  networking.hosts = {
-    "localhost" = [ "n-1-core-payments-payments-crypto-backend-development-azu-vzvax.py.n1co.dev" ];
+  # networking.interfaces.wlp1s0.useDHCP = lib.mkDefault false;
 
   };
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";

@@ -1,21 +1,22 @@
 {pkgs, ...}:
 {
-    gtk.catppuccin.enable = true;
-    gtk.catppuccin.flavor = "mocha";
-    gtk.catppuccin.icon.enable = true;
-    
+    #gtk.catppuccin.enable = true;
+    #gtk.catppuccin.flavor = "mocha";
+    #gtk.catppuccin.icon.enable = true;
+
+    catppuccin.tmux.enable = true;
     catppuccin.flavor = "mocha";
-    programs.k9s.catppuccin.enable = true;
-    programs.k9s.catppuccin.transparent = true;
-    programs.lazygit.catppuccin.enable = true;
-    programs.lazygit.catppuccin.accent = "mauve";
-    programs.zsh.syntaxHighlighting.catppuccin.enable = true;
+    catppuccin.k9s.enable = true;
+    catppuccin.k9s.transparent = true;
+    catppuccin.lazygit.enable = true;
+    catppuccin.lazygit.accent = "mauve";
+    catppuccin.zsh-syntax-highlighting.enable = true;
+    catppuccin.hyprlock.enable = true;
 
 
     programs.gpg.enable = true;
     programs.chromium.enable = true;
     programs.hyprlock.enable = true;
-    programs.hyprlock.catppuccin.enable = true;
     programs.hyprlock.settings = {
       general = {
         ignore_empty_input = true;
@@ -91,7 +92,6 @@
     };
 
     programs.tmux = {
-      catppuccin.enable = true;
       prefix = "C-a";
       enable = true;
       mouse = true;
@@ -137,6 +137,8 @@
       pkgs.rofi-systemd
       pkgs.rofi-power-menu
 
+      pkgs.nerd-fonts.hack
+      pkgs.nerd-fonts.fira-code
     ]; 
 
     services.darkman.enable = true;

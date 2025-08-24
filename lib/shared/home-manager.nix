@@ -12,12 +12,12 @@ in {
   #];
   
   home.packages = with pkgs; [
-    fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm
-    lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome
-    dotnet (pkgs.python312.withPackages (ps: with ps; [
-      pyyaml
-      requests
-    ]))
+    fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
+    lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome nss
+    nerd-fonts.hack
+    dotnet 
+
+    # csharp-ls
   ];
 
   home.sessionVariables = {
@@ -76,6 +76,11 @@ in {
     pkgs.lib.recursiveUpdate git
     {
       enable = true;
+      userName = git.userName;
+      userEmail = git.userEmail;
+      extraConfig = {
+        credential.helper = "store";
+      };
     };
 
   programs.lazygit.enable = true; 
