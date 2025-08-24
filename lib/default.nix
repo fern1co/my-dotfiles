@@ -18,6 +18,7 @@ mkDarwin = {
     inherit system;
     modules = [
         (import configPath { inherit inputs username; })
+        inputs.sops-nix.darwinModules.sops
         inputs.home-manager.darwinModules.home-manager {
 
           home-manager.backupFileExtension = "backup";
@@ -26,6 +27,7 @@ mkDarwin = {
           home-manager.users.${username} = { pkgs, ... }: {
             imports = [
                 inputs.catppuccin.homeModules.catppuccin
+                inputs.sops-nix.homeManagerModules.sops
                 (homeManagerShared {inherit git;})
             ];
             # home.file."Library/Application Support/k9s/skin.yml".source = ../config/k9s/skin.yml;
@@ -43,6 +45,7 @@ mkNixos = {
     inherit system;
     modules = [
         (import configPath { inherit inputs username; })
+        inputs.sops-nix.nixosModules.sops
 
         inputs.home-manager.nixosModules.home-manager
         {
@@ -53,6 +56,7 @@ mkNixos = {
             imports = [
               inputs.catppuccin.homeManagerModules.catppuccin
               inputs.anyrun.homeManagerModules.anyrun
+              inputs.sops-nix.homeManagerModules.sops
               (import ./nixos/home-manager.nix)
                 (homeManagerShared {inherit git;})
             ];

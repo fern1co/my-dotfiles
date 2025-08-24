@@ -12,6 +12,7 @@ let
   imports =
     [ # Include the results of the hardware scan.
       ./hardware.nix
+      ../../shared/secrets.nix
     ];
 
   # Use the systemd-boot EFI boot loader.

@@ -7,6 +7,7 @@ let
   imports =
     [ # Include the results of the hardware scan.
       ./x86_64-linux.nix
+      ../../shared/secrets.nix
     ];
   console = {
     keyMap = "la-latin1";

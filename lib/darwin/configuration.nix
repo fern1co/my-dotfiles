@@ -1,5 +1,9 @@
 { inputs, username }:{ pkgs, ... }:
 {
+  imports = [
+    ../shared/secrets-darwin.nix
+  ];
+
   nixpkgs.config.allowUnfree = true;
   # programs.zsh.enable = true;
   system.stateVersion = 5;
