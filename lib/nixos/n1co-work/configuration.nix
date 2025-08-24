@@ -29,8 +29,13 @@ let
   # networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
 
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
+  programs.nix-ld.enable = true;
 
   # Set your time zone.
+  fonts.packages = [
+    pkgs.nerd-fonts.hack
+    pkgs.nerd-fonts.fira-code
+  ];
   time.timeZone = "America/Tegucigalpa";
   fonts.fontDir.enable = true;
   fonts.fontconfig = {
@@ -147,6 +152,9 @@ let
     nh
     catppuccin-gtk
     trivy
+    slack
+    opentofu
+    pritunl-client
   ];
 
   environment.sessionVariables.NIXOS_OZONE_WL="1";
@@ -197,6 +205,9 @@ let
   services.fprintd.enable = true;
   services.fprintd.tod.enable = true;
   services.fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
+  security.pam.services.hyprlock = {
+    fprintAuth = true;
+  };
   services.avahi.enable = true;
 
   services.openvpn.servers = {

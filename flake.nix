@@ -23,7 +23,10 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       flake = {
         darwinConfigurations = {
-          aarch64 = self.lib.mkDarwin { system = "aarch64-darwin"; };
+          aarch64 = self.lib.mkDarwin {
+            system = "aarch64-darwin";
+            configPath = ./lib/darwin/configuration.nix;
+        };
           x86_64 = self.lib.mkDarwin { system = "x86_64-darwin"; };
         };
 

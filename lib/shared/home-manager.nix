@@ -10,6 +10,7 @@ in {
   	#inputs.nixvim.homeManagerModules.nixvim
    	#../../modules/nvim
   #];
+  
   home.packages = with pkgs; [
     fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
     lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome nss
@@ -33,14 +34,21 @@ in {
     #"ls" = "lsd";
     "cat" = "bat";
     "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
-    "nb" = "nh os switch -H";
+    "k9c" = "kubectl config get-contexts -o name | fzf | xargs -r k9s --context";
   };
   programs.neovim.enable = true;
-  
+
+  catppuccin.zsh-syntax-highlighting.enable = true;
+  catppuccin.tmux.enable = true;
+  catppuccin.lazygit.enable = true;
+  # catppuccin.lazygit.catppuccin.accent = "mauve";
+  catppuccin.k9s.enable = true;
+  catppuccin.k9s.transparent = true;
 
   programs.zsh = {
     enable = true;
     enableCompletion = true;
+    enableVteIntegration = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
     oh-my-zsh = {
@@ -70,22 +78,47 @@ in {
       enable = true;
     };
 
-  programs.lazygit = {
-    enable = true;
-  };
+  programs.lazygit.enable = true; 
 
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
+    tmux = {
+      enableShellIntegration = true;
+    };
   };
 
-  programs.k9s.enable = true;
-
+  programs.k9s = {
+    enable = true;
+    plugins = {
+      shell = {
+        shortCut = "Shift-V";
+        description = "Pod Shell";
+        scopes = [ "po" ];
+        command = "kubectl";
+        background = false;
+        args = [
+          "exec"
+          "-ti"
+          "-n"
+          "$NAMESPACE"
+          "--context"
+          "$CONTEXT"
+          "$NAME"
+          "--"
+          "sh"
+          "-c"
+          "'clear; (bash || ash || sh)'"
+        ];
+      };
+    };
+  };
+  
   programs.kitty = {
     enable = true;
   	font = {
-	    name = "FiraCode Nerd Font Mono";
-	    size = 13.5;
+	    name = "Hack Nerd Font Propo";
+	    size = 14;
 	  };
     shellIntegration = {
       enableZshIntegration = true;
@@ -114,6 +147,46 @@ in {
       "ctrl+shift+enter" = "new_window_with_cwd";
     };
   };
+
+  programs.tmux = {
+    prefix = "C-a";
+    enable = true;
+    mouse = true;
+    plugins = [
+      pkgs.tmuxPlugins.catppuccin
+      pkgs.tmuxPlugins.cpu
+      pkgs.tmuxPlugins.battery
+      pkgs.tmuxPlugins.resurrect
+      pkgs.tmuxPlugins.net-speed
+    ];
+    extraConfig = ''
+      set -g base-index 1
+      set -g escape-time 1
+      setw -g pane-base-index 1
+      setw -g automatic-rename on
+      set -g renumber-windows on
+      set -g set-titles on
+
+      # split current window horizontally
+      bind - split-window -v
+      # split current window vertically
+      bind _ split-window -h
+
+      # pane navigation
+      bind -r h select-pane -L  # move left
+      bind -r j select-pane -D  # move down
+      bind -r k select-pane -U  # move up
+      bind -r l select-pane -R  # move right
+      bind > swap-pane -D       # swap current pane with the next one
+      bind < swap-pane -U       # swap current pane with the previous one
+      # pane resizing
+      bind -r H resize-pane -L 2
+      bind -r J resize-pane -D 2
+      bind -r K resize-pane -U 2
+      bind -r L resize-pane -R 2
+    '';
+  };
+
   #programs.nixvim = {
   # enable = true;
   #};
