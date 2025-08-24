@@ -2,7 +2,7 @@
 let isDarwin = system == "aarch64-darwin" || system == "x86_64-darwin";
 system = pkgs.system;
 dotnet = (with pkgs.dotnetCorePackages; combinePackages [
-      sdk_6_0 sdk_7_0 sdk_8_0
+      sdk_8_0
     ]);
 
 in {
@@ -13,7 +13,7 @@ in {
   home.packages = with pkgs; [
     fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
     lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome nss
-    (pkgs.nerdfonts.override { fonts = [ "Hack" ]; })
+    nerd-fonts.hack
     dotnet 
 
     # csharp-ls
@@ -30,9 +30,10 @@ in {
     "lg" = "lazygit";
     "vim" = "nvim";
     "n" = "nvim";
-    "ls" = "lsd";
+    #"ls" = "lsd";
     "cat" = "bat";
     "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
+    "nb" = "nh os switch -H";
   };
   programs.neovim.enable = true;
   

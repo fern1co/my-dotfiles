@@ -122,11 +122,12 @@ let
   #};
   #users.groups.shairport = {};
 
-  #USers.users.caddy = {
-  #    isSystemUser = true;
-  #    group = "caddy";
-  #};
-  #users.groups.caddy = {};
+  users.users.caddy = {
+      isSystemUser = true;
+      group = "caddy";
+      extraGroups = [ "firefly-iii" ];
+  };
+  users.groups.caddy = {};
 
   users.users.admin = {
      isNormalUser = true;
@@ -181,7 +182,7 @@ let
     discord
     brave
     bmon
-    inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins
+    # inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins
     tmux
     grimblast
     fontconfig
@@ -265,27 +266,27 @@ let
  
 
 services = {
-  snapserver = {
-    enable = false;
-    openFirewall = true;
-    codec = "flac";
-    streams = {
-      pipewire  = {
-        type = "pipe";
-        location = "/run/snapserver/pipewire";
-      };
-      audio_pipe = {
-        type = "pipe";
-        location = "/tmp/snapfifo";
-        query = {
-          name = "Audio Stream";
-          codec = "flac";
-          sampleformat = "48000:16:2";
-        };
-      };
-    };
-    
-  };
+  #snapserver = {
+  #  enable = false;
+  #  openFirewall = true;
+  #  codec = "flac";
+  #  streams = {
+  #    pipewire  = {
+  #      type = "pipe";
+  #      location = "/run/snapserver/pipewire";
+  #    };
+  #    audio_pipe = {
+  #      type = "pipe";
+  #      location = "/tmp/snapfifo";
+  #      query = {
+  #        name = "Audio Stream";
+  #        codec = "flac";
+  #        sampleformat = "48000:16:2";
+  #      };
+  #    };
+  #  };
+  #  
+  #};
   avahi = {
     enable = true;
     nssmdns4 = true;
@@ -309,10 +310,7 @@ services = {
         upstream_dns = [
           "8.8.8.8:53"
           "1.1.1.1:53"
-        ];
-        rewrites = [
-          { "'domain'" = "*.f3rock.local"; "'answer'" = "192.168.10.149"; }
-        ];
+        ]; 
       };
       filtering = {
         protection_enabled = true;
@@ -322,6 +320,9 @@ services = {
         safe_search = {
           enabled = false;  # Enforcing "Safe search" option for search engines, when possible.
         };
+        rewrites = [
+          { domain = "*.f3rock.local"; answer = "192.168.10.149"; }
+        ];
       };
       # The following notation uses map
       # to not have to manually create {enabled = true; url = "";} for every filter
@@ -349,8 +350,14 @@ services = {
   };
   firefly-iii = {
     enable = true;
+    virtualHost = null;
+    group = "caddy";
+    user = "caddy";
     settings = {
       APP_KEY_FILE = "/appkeyfile";
+      APP_URL = "https://finance.f3rock.local";
+      TZ = "America/Tegucigalpa";
+      TRUSTED_PROXIES = "127.0.0.1,::1";
     };
   };
   frigate = {
@@ -457,31 +464,41 @@ services = {
     authKeyFile = "/home/${username}/tailscale_key";
   };
 
-  #caddy = {
-  #  enable = false;
-  #  globalConfig = ''
-  #      skip_install_trust
-  #  '';
-  #  user = "caddy";
-  #  group = "caddy";
+  caddy = {
+    enable = true;
+    globalConfig = ''
+        skip_install_trust
+    '';
+    user = "caddy";
+    group = "caddy";
 
-  #  virtualHosts = {
-  #    "ha.${config.networking.hostName}.tail337b8f.ts.net" = {
-  #        extraConfig = "reverse_proxy 127.0.0.1:8123";
-  #      };
-  #    "ha.f3rock.local" = {
-  #      extraConfig = ''
-  #        tls internal
-  #        reverse_proxy localhost:8123
-  #      '';
-  #    };
-  #    "test.f3rock.local" = {
-  #      extraConfig = ''
-  #        respond "Hello, world!"
-  #      '';
-  #    };
-  #  };
-  #};
+    virtualHosts = {
+      "finance.f3rock.local" = {
+          extraConfig  = ''
+            root * ${config.services.firefly-iii.package}/public
+            php_fastcgi unix/${config.services.phpfpm.pools.firefly-iii.socket} {
+            }
+            file_server
+            tls internal
+          '';
+      };
+      "ha.${config.networking.hostName}.tail337b8f.ts.net" = {
+          extraConfig = "reverse_proxy 127.0.0.1:8123";
+        };
+      "ha.f3rock.local" = {
+        extraConfig = ''
+          tls internal
+          reverse_proxy localhost:8123
+        '';
+      };
+      "test.f3rock.local" = {
+        extraConfig = ''
+          tls internal
+          respond "Hello, world!"
+        '';
+      };
+    };
+  };
 };
 
 systemd.tmpfiles.rules = [
@@ -519,7 +536,9 @@ systemd.tmpfiles.rules = [
 #  };
 system.activationScripts.setup_keyfile = ''
     echo "mysecretpasswordmysecretpassword" > /appkeyfile
-    chown firefly-iii:firefly-iii /appkeyfile
+    chown caddy:caddy /appkeyfile
+    chmod -R 775 /var/lib/firefly-iii/storage
+    chown -R caddy:caddy /var/lib/firefly-iii/storage
   '';
 
   systemd.services = {
@@ -528,9 +547,9 @@ system.activationScripts.setup_keyfile = ''
             SupplementaryGroups = [ "video" ];
       };
     };
-    # caddy.after = ["tailscale.service"];
-    # caddy.path = with pkgs; [ sudo coreutils nss.tools ];
-    # caddy.environment.JAVA_HOME = "${pkgs.openjdk}/lib/openjdk";
+    caddy.after = ["tailscale.service"];
+    caddy.path = with pkgs; [ sudo coreutils nss.tools ];
+    caddy.environment.JAVA_HOME = "${pkgs.openjdk}/lib/openjdk";
  
     #adguardhome.after = ["network-online.target"];
   };

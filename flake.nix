@@ -2,10 +2,6 @@
   description = "Example Darwin system flake";
 
   inputs = {
-    anyrun = {
-      url = "github:anyrun-org/anyrun";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
@@ -16,9 +12,10 @@
 	    inputs.nixpkgs.follows = "nixpkgs";
     };
     catppuccin.url = "github:catppuccin/nix";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = inputs@{ self, flake-parts, anyrun, ... }:
+  outputs = inputs@{ self, flake-parts, ... }:
     let
     mkDarwin = self.lib.mkDarwin {};
     mkNixos = self.lib.mkNixos {};
@@ -32,7 +29,7 @@
 
 
         nixosConfigurations = {
-          n1co = self.lib.mkNixos { 
+          n1co = self.lib.mkNixos {
               system = "x86_64-linux";
               configPath = ./lib/nixos/n1co-work/configuration.nix;
           };
