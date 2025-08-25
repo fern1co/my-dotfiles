@@ -17,6 +17,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, flake-parts, ... }:
@@ -50,7 +54,15 @@
         lib = import ./lib { inherit inputs; };
       };
 
-      systems = [ "aarch64-darwin" "aarch64-linux" "x86-64-darwin" "x86-64-linux" ];
+      systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
+
+      perSystem = { config, self', inputs', pkgs, system, lib, ... }: {
+        packages = lib.optionalAttrs (system == "x86_64-linux") {
+          digitalOceanImage = self.lib.mkDigitalOceanImage {
+            inherit system;
+          };
+        };
+      };
 
     };
 }

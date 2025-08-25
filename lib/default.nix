@@ -64,4 +64,33 @@ mkNixos = {
         }
     ];
   };
+
+mkDigitalOceanImage = {
+    git ? defaultGit,
+    username ? defaultUserName,
+    system ? "x86_64-linux",
+    configPath ? ./nixos/digitalocean/configuration.nix,
+  }:
+  inputs.nixos-generators.nixosGenerate {
+    inherit system;
+    format = "do";
+    modules = [
+      (import configPath { inherit inputs username; })
+      inputs.sops-nix.nixosModules.sops
+      inputs.home-manager.nixosModules.home-manager
+      {
+        home-manager.backupFileExtension = "backup";
+        home-manager.useGlobalPkgs = true;
+        home-manager.useUserPackages = true;
+        home-manager.users."${username}" = { pkgs, ... }: {
+          imports = [
+            inputs.sops-nix.homeModules.sops
+            inputs.catppuccin.homeModules.catppuccin
+            (import ./nixos/home-manager.nix)
+            (homeManagerShared {inherit git;})
+          ];
+        };
+      }
+    ];
+  };
 }
