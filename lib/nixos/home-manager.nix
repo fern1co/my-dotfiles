@@ -14,6 +14,7 @@
     catppuccin.hyprlock.enable = true;
 
 
+    programs.zsh.enable = true;
     programs.gpg.enable = true;
     programs.chromium.enable = true;
     programs.hyprlock.enable = true;

@@ -54,7 +54,7 @@ mkNixos = {
           home-manager.useUserPackages = true;
           home-manager.users."${username}" = { pkgs, ... }: {
             imports = [
-              inputs.sops-nix.homeModules.sops
+              inputs.sops-nix.homeManagerModules.sops
               inputs.catppuccin.homeModules.catppuccin
               #inputs.anyrun.homeManagerModules.anyrun
               (import ./nixos/home-manager.nix)
@@ -84,10 +84,11 @@ mkDigitalOceanImage = {
         home-manager.useUserPackages = true;
         home-manager.users."${username}" = { pkgs, ... }: {
           imports = [
-            inputs.sops-nix.homeModules.sops
-            inputs.catppuccin.homeModules.catppuccin
-            (import ./nixos/home-manager.nix)
-            (homeManagerShared {inherit git;})
+            (import ./nixos/digitalocean/home.nix)
+            #inputs.sops-nix.homeModules.sops
+            #inputs.catppuccin.homeModules.catppuccin
+            #(import ./nixos/home-manager.nix)
+            #(homeManagerShared {inherit git;})
           ];
         };
       }

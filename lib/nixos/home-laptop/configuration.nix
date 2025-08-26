@@ -216,6 +216,7 @@ let
     esphome 
     nss.tools
     openjdk
+    doctl
   ];
 
   environment.sessionVariables.NIXOS_OZONE_WL="1";
