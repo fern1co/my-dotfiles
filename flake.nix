@@ -67,6 +67,7 @@
       perSystem = { config, self', inputs', pkgs, system, lib, ... }: {
         packages = lib.optionalAttrs (system == "x86_64-linux") {
           digitalOceanImage = self.lib.mkDigitalOceanImage {
+            username = "ferock";
             inherit system;
           };
         };

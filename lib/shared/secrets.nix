@@ -36,6 +36,12 @@
         path = "/home/fernando-carbajal/vpn_configs/vpnconfig-prod-core-cross.ovpn";
         mode = "0600";
       };
+      # DigitalOcean SSH public key
+      "digitalocean/ssh-public-key" = {
+        owner = "root";
+        path = "/etc/ssh/authorized_keys/digitalocean_key.pub";
+        mode = "0644";
+      };
     };
   };
 }
