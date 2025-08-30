@@ -1,0 +1,227 @@
+name: Dotfiles Backup Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  validate-nix-configs:
+    name: Validate Nix Configurations
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+      
+    - name: Setup Nix Cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+      
+    - name: Validate flake
+      run: |
+        nix flake check --no-build
+        
+    - name: Check flake inputs
+      run: |
+        nix flake metadata
+        
+    - name: Validate NixOS configurations
+      run: |
+        # Validate each NixOS configuration can build
+        nix build .#nixosConfigurations.n1co.config.system.build.toplevel --no-link
+        nix build .#nixosConfigurations.home_laptop.config.system.build.toplevel --no-link
+
+  validate-darwin-configs:
+    name: Validate Darwin Configurations
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+      
+    - name: Setup Nix Cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+      
+    - name: Validate Darwin aarch64 configuration
+      run: |
+        nix build .#darwinConfigurations.aarch64.system --no-link
+        
+    - name: Validate Darwin x86_64 configuration  
+      run: |
+        nix build .#darwinConfigurations.x86_64.system --no-link
+
+  backup-integrity-check:
+    name: Backup Integrity Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for backup validation
+        
+    - name: Validate git repository integrity
+      run: |
+        echo "🔍 Checking git repository integrity..."
+        git fsck --full --strict
+        
+        echo "📊 Repository statistics:"
+        echo "Commits: $(git rev-list --all --count)"
+        echo "Branches: $(git branch -r | wc -l)"
+        echo "Size: $(du -sh .git)"
+        
+    - name: Check for sensitive files
+      run: |
+        echo "🛡️ Scanning for potentially sensitive files..."
+        
+        # Check for common sensitive patterns
+        sensitive_patterns=(
+          "*.pem"
+          "*.key" 
+          "*.p12"
+          "*.pfx"
+          "*password*"
+          "*secret*"
+          "*.env"
+        )
+        
+        found_sensitive=false
+        for pattern in "${sensitive_patterns[@]}"; do
+          if find . -name "$pattern" -not -path "./.git/*" | grep -q .; then
+            echo "⚠️ Found potentially sensitive files matching: $pattern"
+            find . -name "$pattern" -not -path "./.git/*"
+            found_sensitive=true
+          fi
+        done
+        
+        if [ "$found_sensitive" = true ]; then
+          echo "❌ Potentially sensitive files found - review required"
+          exit 1
+        else
+          echo "✅ No obviously sensitive files found"
+        fi
+        
+    - name: Validate SOPS configuration
+      run: |
+        echo "🔐 Validating SOPS configuration..."
+        
+        if [ -f ".sops.yaml" ]; then
+          echo "✅ .sops.yaml found"
+          
+          # Check for placeholder keys
+          if grep -q "age1hl8zqn7j9k6j8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k8k" .sops.yaml; then
+            echo "❌ Placeholder age key detected in .sops.yaml"
+            exit 1
+          else
+            echo "✅ .sops.yaml appears to have real age key"
+          fi
+        else
+          echo "⚠️ No .sops.yaml found"
+        fi
+        
+        if [ -f "secrets/secrets.yaml" ]; then
+          echo "✅ Encrypted secrets file found"
+          
+          # Verify file is encrypted
+          if head -1 secrets/secrets.yaml | grep -q "sops:"; then
+            echo "✅ secrets.yaml appears to be encrypted"
+          else
+            echo "❌ secrets.yaml does not appear to be encrypted"
+            exit 1
+          fi
+        else
+          echo "ℹ️ No secrets.yaml found"
+        fi
+
+  create-backup-bundle:
+    name: Create Backup Bundle
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Create git bundle backup
+      run: |
+        echo "📦 Creating git bundle backup..."
+        git bundle create dotfiles-backup-$(date +%Y%m%d).bundle --all
+        
+        echo "✅ Bundle created:"
+        ls -lah dotfiles-backup-*.bundle
+        
+    - name: Upload backup bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotfiles-backup-$(date +%Y%m%d)
+        path: dotfiles-backup-*.bundle
+        retention-days: 90
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  backup-status-notification:
+    name: Backup Status Notification
+    runs-on: ubuntu-latest
+    needs: [validate-nix-configs, validate-darwin-configs, backup-integrity-check]
+    if: always() && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Determine overall status
+      id: status
+      run: |
+        if [[ "${{ needs.validate-nix-configs.result }}" == "success" && 
+              "${{ needs.validate-darwin-configs.result }}" == "success" && 
+              "${{ needs.backup-integrity-check.result }}" == "success" ]]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "message=✅ All backup validations passed" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "message=❌ Some backup validations failed" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create backup status badge
+      run: |
+        if [[ "${{ steps.status.outputs.status }}" == "success" ]]; then
+          echo "🟢 Backup Status: Healthy" > backup-status.txt
+        else
+          echo "🔴 Backup Status: Issues Detected" > backup-status.txt
+        fi
+        
+        echo "Last Check: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> backup-status.txt
+        echo "Repository: ${{ github.repository }}" >> backup-status.txt
+        echo "Commit: ${{ github.sha }}" >> backup-status.txt
