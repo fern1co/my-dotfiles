@@ -58,7 +58,7 @@ mkNixos = {
               inputs.catppuccin.homeModules.catppuccin
               #inputs.anyrun.homeManagerModules.anyrun
               (import ./nixos/home-manager.nix)
-                (homeManagerShared {inherit git;})
+              (homeManagerShared {inherit git;})
             ];
           };
         }

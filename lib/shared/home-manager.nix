@@ -12,8 +12,8 @@ in {
   #];
   
   home.packages = with pkgs; [
-    fd jq k9s kubectl lazydocker ripgrep azure-cli kubelogin kubernetes-helm terraform
-    lens google-cloud-sdk pulumi-bin go cargo kind gh gcc google-chrome nss
+    fd jq k9s kubectl lazydocker ripgrep kubernetes-helm
+    google-cloud-sdk go cargo gh gcc google-chrome nss
     nerd-fonts.hack
     dotnet 
 
