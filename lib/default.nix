@@ -85,7 +85,7 @@ mkDigitalOceanImage = {
         home-manager.users."${username}" = { pkgs, ... }: {
           imports = [
             (import ./nixos/digitalocean/home.nix)
-            #inputs.sops-nix.homeModules.sops
+            inputs.sops-nix.homeManagerModules.sops
             #inputs.catppuccin.homeModules.catppuccin
             #(import ./nixos/home-manager.nix)
             #(homeManagerShared {inherit git;})

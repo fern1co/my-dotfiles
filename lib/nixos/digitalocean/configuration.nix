@@ -1,6 +1,9 @@
 { inputs, username ? "ferock" }: { config, pkgs, lib, ... }:
 
 {
+  imports = [
+    ../../shared/secrets.nix
+  ];
   # Enable cloud-init for DigitalOcean metadata service
   services.cloud-init.enable = true;
   services.cloud-init.network.enable = true;
@@ -46,6 +49,8 @@
     curl
     htop
     tree
+    sops
+    age
   ];
 
   # Enable Docker for containerized applications
