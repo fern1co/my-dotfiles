@@ -1,7 +1,7 @@
 { inputs, username }:{ pkgs, ... }:
 {
   imports = [
-    (import ../../shared/secrets-darwin.nix { inherit username; inherit inputs; })
+    (import ../../shared/secrets-macbookpro.nix { inherit username; inherit inputs; })
         #./home.nix
   ];
 
@@ -30,6 +30,7 @@
         ngrok
         python314
         claude-code
+        sops
   ];
 
   security.pam.services.sudo_local.touchIdAuth = true;
