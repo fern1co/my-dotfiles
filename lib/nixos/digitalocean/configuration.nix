@@ -7,10 +7,8 @@
   ];
 
   # Boot configuration for DigitalOcean
-  boot.loader.grub = {
-    enable = true;
-    device = "/dev/vda";
-  };
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = false;
 
   # Enable cloud-init for DigitalOcean metadata service  
   services.cloud-init.enable = true;
