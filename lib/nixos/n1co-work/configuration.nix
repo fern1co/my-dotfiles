@@ -130,7 +130,7 @@ let
     discord
     brave
     bmon
-    inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins
+    # inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins
     tmux
     grimblast
     fontconfig

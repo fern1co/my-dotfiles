@@ -21,6 +21,10 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, flake-parts, ... }:
@@ -56,10 +60,24 @@
               system = "x86_64-linux";
               configPath = ./lib/nixos/home-laptop/configuration.nix;
           };
+          digitalocean = self.lib.mkNixos {
+              system = "x86_64-linux";
+              configPath = ./lib/nixos/digitalocean/configuration.nix;
+              username = "ferock";
+          };
         };
 
 
         lib = import ./lib { inherit inputs; };
+
+        deploy.nodes.digitalocean = {
+          hostname = "165.227.123.205"; # Replace with your actual droplet IP
+          profiles.system = {
+            sshUser = "ferock";
+            path = inputs.deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.digitalocean;
+            user = "root";
+          };
+        };
       };
 
       systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
@@ -70,6 +88,14 @@
             username = "ferock";
             inherit system;
           };
+        };
+
+        # deploy-rs integration
+        checks = inputs.deploy-rs.lib.${system}.deployChecks self.deploy;
+        
+        apps.deploy = {
+          type = "app";
+          program = "${inputs.deploy-rs.packages.${system}.default}/bin/deploy";
         };
       };
 

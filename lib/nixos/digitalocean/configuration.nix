@@ -2,12 +2,20 @@
 
 {
   imports = [
-    ../../shared/secrets.nix
+    ./hardware.nix
+    (import ./secrets.nix { inherit inputs; inherit username; })
   ];
-  # Enable cloud-init for DigitalOcean metadata service
+
+  # Boot configuration for DigitalOcean
+  boot.loader.grub = {
+    enable = true;
+    device = "/dev/vda";
+  };
+
+  # Enable cloud-init for DigitalOcean metadata service  
   services.cloud-init.enable = true;
   services.cloud-init.network.enable = true;
-
+  
   # Network configuration
   networking.hostName = "nixos-kyra";
 
@@ -33,9 +41,7 @@
     home = "/home/${username}";
     extraGroups = [ "wheel" "networkmanager" ];
     shell = pkgs.zsh;
-    openssh.authorizedKeys.keyFiles = [
-      config.sops.secrets."digitalocean/ssh-public-key".path
-    ];
+    openssh.authorizedKeys.keys = lib.mkForce []; # Let cloud-init handle SSH keys
   };
 
   # Enable sudo for wheel group
@@ -72,6 +78,9 @@
     settings.experimental-features = [ "nix-command" "flakes" ];
     settings.trusted-users = [ "root" username ];
   };
+
+  # Allow unfree packages for Chrome and other tools
+  nixpkgs.config.allowUnfree = true;
 
   # System state version
   system.stateVersion = "25.05";
