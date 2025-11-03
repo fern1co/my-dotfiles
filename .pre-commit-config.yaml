@@ -1,0 +1,57 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.patch$'
+      - id: end-of-file-fixer
+        exclude: '\.patch$'
+      - id: check-yaml
+        exclude: 'secrets/secrets.yaml'  # Encrypted file
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+
+  - repo: https://github.com/kamadorueda/alejandra
+    rev: 3.0.0
+    hooks:
+      - id: alejandra-check
+        name: Check Nix formatting with Alejandra
+        files: '\.nix$'
+
+  - repo: https://github.com/Mic92/nix-update
+    rev: 0.19.4
+    hooks:
+      - id: nix-linter
+        name: Lint Nix files
+        files: '\.nix$'
+        # Skip if nix-linter is not available
+        verbose: true
+        stages: [manual]
+
+  - repo: local
+    hooks:
+      - id: flake-check
+        name: Nix flake check
+        entry: nix flake check --no-build
+        language: system
+        files: '\.nix$|flake\.lock'
+        pass_filenames: false
+        stages: [manual]  # Run only when explicitly requested
+
+      - id: check-secrets
+        name: Check for unencrypted secrets
+        entry: bash -c 'if git diff --cached --name-only | grep -q "secrets/secrets.yaml"; then if sops -d secrets/secrets.yaml > /dev/null 2>&1; then exit 0; else echo "Error: secrets.yaml is not encrypted!"; exit 1; fi; fi'
+        language: system
+        pass_filenames: false
+
+      - id: no-large-files
+        name: Prevent committing large files
+        entry: bash -c 'for file in $(git diff --cached --name-only); do if [ -f "$file" ] && [ $(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null) -gt 1048576 ]; then echo "Error: $file is larger than 1MB"; exit 1; fi; done'
+        language: system
+        pass_filenames: false

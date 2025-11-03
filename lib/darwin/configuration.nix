@@ -27,7 +27,8 @@
         e1s
         bagels
         llama-cpp
-        claude-code
+        #claude-code
+        neovim
         # terragrunt
   ];
 

@@ -1,23 +1,15 @@
 { inputs }:{git}:{ pkgs, ...}:
-let isDarwin = system == "aarch64-darwin" || system == "x86_64-darwin";
-system = pkgs.system;
-dotnet = (with pkgs.dotnetCorePackages; combinePackages [
+let
+  system = pkgs.system;
+  dotnet = (with pkgs.dotnetCorePackages; combinePackages [
       sdk_8_0
     ]);
-
 in {
-  #imports = [
-  	#inputs.nixvim.homeManagerModules.nixvim
-   	#../../modules/nvim
-  #];
-  
   home.packages = with pkgs; [
     fd jq k9s kubectl lazydocker ripgrep kubernetes-helm
     google-cloud-sdk go cargo gh gcc google-chrome nss
     nerd-fonts.hack
-    dotnet 
-
-    # csharp-ls
+    dotnet
   ];
 
   home.sessionVariables = {
@@ -31,7 +23,6 @@ in {
     "lg" = "lazygit";
     "vim" = "nvim";
     "n" = "nvim";
-    #"ls" = "lsd";
     "cat" = "bat";
     "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
     "k9c" = "kubectl config get-contexts -o name | fzf | xargs -r k9s --context";
@@ -41,7 +32,6 @@ in {
   catppuccin.zsh-syntax-highlighting.enable = true;
   catppuccin.tmux.enable = true;
   catppuccin.lazygit.enable = true;
-  # catppuccin.lazygit.catppuccin.accent = "mauve";
   catppuccin.k9s.enable = true;
   catppuccin.k9s.transparent = true;
 
@@ -191,9 +181,5 @@ in {
       bind -r L resize-pane -R 2
     '';
   };
-
-  #programs.nixvim = {
-  # enable = true;
-  #};
 }
 

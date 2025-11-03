@@ -1,14 +1,12 @@
-{ inputs, username }: { config, pkgs, lib, ... }:
+{ inputs, username }: { config, pkgs, lib, modulesPath, ... }:
 
 {
   imports = [
-    ./hardware.nix
     (import ./secrets.nix { inherit inputs; inherit username; })
+    (modulesPath + "/virtualisation/digital-ocean-config.nix")
   ];
 
-  # Boot configuration for DigitalOcean
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = false;
+
 
   # Enable cloud-init for DigitalOcean metadata service  
   services.cloud-init.enable = true;

@@ -31,23 +31,25 @@
     let
     mkDarwin = self.lib.mkDarwin {};
     mkNixos = self.lib.mkNixos {};
+    # Import host configurations
+    hosts = import ./hosts.nix;
   in
     flake-parts.lib.mkFlake { inherit inputs; } {
       flake = {
         darwinConfigurations = {
-          aarch64 = self.lib.mkDarwin {
-            system = "aarch64-darwin";
-            configPath = ./lib/darwin/configuration.nix;
-        };
-          x86_64 = self.lib.mkDarwin { 
-            system = "x86_64-darwin";
-            configPath = ./lib/darwin/configuration.nix;
-          };
-          macbookpro = self.lib.mkDarwin { 
-            system = "x86_64-darwin";
-            configPath = ./lib/darwin/macbook-pro/configuration.nix;
-            username = "fcarbajalm07";
-          };
+            aarch64 = self.lib.mkDarwin {
+                system = "aarch64-darwin";
+                configPath = ./lib/darwin/configuration.nix;
+            };
+            x86_64 = self.lib.mkDarwin { 
+                system = "x86_64-darwin";
+                configPath = ./lib/darwin/configuration.nix;
+            };
+            macbook-pro = self.lib.mkDarwin {
+                system = "x86_64-darwin";
+                configPath = ./lib/darwin/macbook-pro/configuration.nix;
+                username = "fcarbajalm07";
+            };
         };
 
 
@@ -71,11 +73,11 @@
         lib = import ./lib { inherit inputs; };
 
         deploy.nodes.digitalocean = {
-          hostname = "165.227.123.205"; # Replace with your actual droplet IP
+          hostname = hosts.digitalocean.hostname;
           profiles.system = {
-            sshUser = "ferock";
+            sshUser = hosts.digitalocean.sshUser;
             path = inputs.deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.digitalocean;
-            user = "root";
+            user = hosts.digitalocean.deployUser;
           };
         };
       };
@@ -90,9 +92,29 @@
           };
         };
 
-        # deploy-rs integration
-        checks = inputs.deploy-rs.lib.${system}.deployChecks self.deploy;
-        
+        # Comprehensive checks for all configurations
+        checks = lib.mkMerge [
+          # Deploy-rs checks for deployment configurations
+          (inputs.deploy-rs.lib.${system}.deployChecks self.deploy)
+
+          # Darwin configuration checks (only on darwin systems)
+          (lib.optionalAttrs (lib.hasInfix "darwin" system) {
+            darwin-aarch64 = self.darwinConfigurations.aarch64.system;
+            darwin-x86_64 = self.darwinConfigurations.x86_64.system;
+            darwin-macbook-pro = self.darwinConfigurations.macbook-pro.system;
+          })
+
+          # NixOS configuration checks (only on linux systems)
+          (lib.optionalAttrs (lib.hasInfix "linux" system) {
+            nixos-n1co = self.nixosConfigurations.n1co.config.system.build.toplevel;
+            nixos-home_laptop = self.nixosConfigurations.home_laptop.config.system.build.toplevel;
+            nixos-digitalocean = self.nixosConfigurations.digitalocean.config.system.build.toplevel;
+          })
+        ];
+
+        # Formatter for `nix fmt`
+        formatter = pkgs.alejandra;
+
         apps.deploy = {
           type = "app";
           program = "${inputs.deploy-rs.packages.${system}.default}/bin/deploy";

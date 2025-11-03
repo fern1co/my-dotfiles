@@ -1,0 +1,59 @@
+# Nix build results
+result
+result-*
+
+# Nix development environments
+.direnv/
+.envrc
+
+# Large backup files
+backup.gz
+*.backup.gz
+*.tar.gz.bak
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Editor files
+*~
+*.swp
+*.swo
+.*.swp
+.*.swo
+.vscode/
+.idea/
+
+# Secrets (encrypted files are OK to commit)
+*.key
+*.pem
+!*.pub
+
+# Build artifacts
+*.qcow2
+*.img
+*.iso
+
+# Temporary files
+tmp/
+temp/

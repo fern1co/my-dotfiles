@@ -15,12 +15,6 @@
     fsType = "ext4";
   };
 
-  # EFI boot partition
-  fileSystems."/boot" = {
-    device = "/dev/vda15";
-    fsType = "vfat";
-  };
-
   # Swap configuration (optional for smaller droplets)
   swapDevices = [
     {

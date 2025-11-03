@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  flake-check:
+    name: Flake Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run flake check
+        run: nix flake check --all-systems --show-trace
+
+  build-darwin-configs:
+    name: Build Darwin Configurations
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        config: [aarch64, x86_64, macbook-pro]
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build ${{ matrix.config }} configuration
+        run: |
+          nix build .#darwinConfigurations.${{ matrix.config }}.system \
+            --show-trace \
+            --print-build-logs
+
+  build-nixos-configs:
+    name: Build NixOS Configurations
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config: [n1co, home_laptop, digitalocean]
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build ${{ matrix.config }} configuration
+        run: |
+          nix build .#nixosConfigurations.${{ matrix.config }}.config.system.build.toplevel \
+            --show-trace \
+            --print-build-logs
+
+  build-digitalocean-image:
+    name: Build DigitalOcean Image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build DigitalOcean image
+        run: |
+          nix build .#digitalOceanImage \
+            --show-trace \
+            --print-build-logs
+
+      - name: Get image info
+        run: |
+          ls -lh result/
+          du -h result/nixos.qcow2.gz || true
+
+  format-check:
+    name: Check Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check Nix formatting
+        run: |
+          # Check if alejandra is available, otherwise skip
+          if nix run nixpkgs#alejandra -- --version > /dev/null 2>&1; then
+            nix run nixpkgs#alejandra -- --check .
+          else
+            echo "Alejandra not available, skipping format check"
+          fi
+
+  deploy-check:
+    name: Check Deployment Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify deploy-rs checks
+        run: |
+          nix flake check --show-trace
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [flake-check, build-darwin-configs, build-nixos-configs, format-check, deploy-check]
+    if: always()
+    steps:
+      - name: Check job statuses
+        run: |
+          echo "Flake Check: ${{ needs.flake-check.result }}"
+          echo "Darwin Builds: ${{ needs.build-darwin-configs.result }}"
+          echo "NixOS Builds: ${{ needs.build-nixos-configs.result }}"
+          echo "Format Check: ${{ needs.format-check.result }}"
+          echo "Deploy Check: ${{ needs.deploy-check.result }}"
+
+          if [[ "${{ needs.flake-check.result }}" != "success" ]] || \
+             [[ "${{ needs.build-darwin-configs.result }}" != "success" ]] || \
+             [[ "${{ needs.build-nixos-configs.result }}" != "success" ]] || \
+             [[ "${{ needs.format-check.result }}" != "success" ]] || \
+             [[ "${{ needs.deploy-check.result }}" != "success" ]]; then
+            echo "❌ Some checks failed"
+            exit 1
+          else
+            echo "✅ All checks passed"
+          fi
