@@ -5,7 +5,7 @@
   digitalocean = {
     # Replace with your actual droplet IP
     # You can also use a domain name here
-    hostname = "165.227.123.205";
+    hostname = "64.225.51.178";
 
     # SSH configuration
     sshUser = "ferock";
