@@ -1,228 +1,131 @@
-# Edit this configuration file to define what should be installed on
-# your system. Help is available in the configuration.nix(5) man page, on
-# https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
-
-{ inputs, username }:{ pkgs, config, ... }:
+{ inputs, username }: { pkgs, config, ... }:
 
 let
   lib = pkgs.lib;
-  in
+
+  # Import host metadata
+  hosts = import ../../../hosts.nix;
+  hostConfig = hosts.home_laptop;
+
+  # Load profiles from host configuration
+  profileLoader = import ../../profiles/default.nix;
+  profileImports = profileLoader { profiles = hostConfig.profiles; };
+
+in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware.nix
-      ../../shared/secrets.nix
-    ];
+  imports = [
+    # Hardware configuration
+    ./hardware.nix
 
-  # Use the systemd-boot EFI boot loader.
-  hardware.bluetooth.enable = true;
-  # Use the systemd-boot EFI boot loader.
-#  boot.loader.systemd-boot.enable = true;
+    # Secrets
+    ../../shared/secrets.nix
+  ] ++ profileImports;  # Import all profiles defined in hosts.nix
+
+  # ============================================================================
+  # BOOT CONFIGURATION
+  # ============================================================================
+
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.grub.enable = true;
-  boot.loader.grub.devices = [ "nodev" ];
-  boot.loader.grub.efiSupport = true;
-  boot.loader.grub.useOSProber = true;
+  boot.loader.grub = {
+    enable = true;
+    devices = [ "nodev" ];
+    efiSupport = true;
+    useOSProber = true;
+  };
 
-  # networking.hostName = "nixos"; # Define your hostname.
-  # Pick only one of the below networking options.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-  networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
+  # ============================================================================
+  # NETWORKING
+  # ============================================================================
 
-  # Set your time zone.
+  networking.hostName = hostConfig.hostName;
+  networking.networkmanager.enable = true;
+
+  # ============================================================================
+  # LOCALE AND TIME
+  # ============================================================================
+
   time.timeZone = "America/Tegucigalpa";
-  fonts.fontDir.enable = true;
-  fonts.fontconfig = {
-    enable = true;
-    antialias = true;
-
-    hinting = {
-      enable = true;
-      autohint = false;
-      style = "full";
-    };
-
-    subpixel = {
-      lcdfilter = "default";
-      rgba = "rgb";
-    };
-
-    defaultFonts = {
-      monospace = ["Hack Nerd Font Mono"];
-      sansSerif = ["FiraCode Nerd Font" "Hack Nerd Font"];
-      serif = ["Noto Serif" "Noto Color Emoji"];
-    };
-  };
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Select internationalisation properties.
   i18n.defaultLocale = "es_US.UTF-8";
-  # console = {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  #   useXkbConfig = true; # use xkb.options in tty.
-  # };
 
-  # Enable the X11 windowing system.
-  # services.xserver.enable = true;
-
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];  
-  
-  nixpkgs.config.allowUnfree = true;
-
-  # Configure keymap in X11
-  # services.xserver.xkb.layout = "us";
-  # services.xserver.xkb.options = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable sound.
-  # hardware.pulseaudio.enable = true;
-  # OR
-  # services.pipewire = {
-  #   enable = true;
-  #   pulse.enable = true;
-  # };
-  security.rtkit.enable = true;
- 
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-    alsa.support32Bit = true;
-  #  extraConfig.pipewire = {
-  #    load-module module-native-protocol-unix auth-anonymous=1
-  #    "context.modules" = [
-  #      {
-  #        name = "libpipewire-module-rtp-recv";
-  #        args = { sap.listen = true; };
-  #      }
-  #    ];
-  #  };
+  # Keyboard layout from host config
+  services.xserver.xkb.layout = hostConfig.keyboardLayout or "us";
+  console = {
+    keyMap = "la-latin1";
+    earlySetup = true;
+    font = "${pkgs.terminus_font}/share/consolefonts/ter-v32n.psf.gz";
   };
- 
-  services.shairport-sync = {
-    enable = true;
-    openFirewall = true;
-    arguments = "-o alsa";
-    #arguments = "-v -o pw";
-    # settings.general.name = "NixOS-Speakers";
-  }; 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.libinput.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-
-  #users.users.shairport = {
-  #  isSystemUser = true;
-  #};
-  #users.groups.shairport = {};
-
-  users.users.caddy = {
-      isSystemUser = true;
-      group = "caddy";
-      extraGroups = [ "firefly-iii" ];
-  };
-  users.groups.caddy = {};
+  # ============================================================================
+  # USERS
+  # ============================================================================
 
   users.users.admin = {
-     isNormalUser = true;
-     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-     packages = with pkgs; [
-       tree
-       git
-       neovim
-     ];
-   };
+    isNormalUser = true;
+    extraGroups = [ "wheel" ];
+    packages = with pkgs; [ tree git neovim ];
+  };
+
   users.users.${username} = {
     isNormalUser = true;
     home = "/home/${username}";
-    extraGroups = [ "wheel" "docker" "video" "audio" "pipewire"];
+    extraGroups = [ "wheel" "docker" "video" "audio" "pipewire" ];
     shell = pkgs.zsh;
   };
 
-  users.extraGroups.video.members = ["frigate"  "${username}" ];
-  # programs.firefox.enable = true;
+  users.extraGroups.video.members = [ "frigate" "${username}" ];
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
+  # Caddy user for homelab services
+  users.users.caddy = {
+    isSystemUser = true;
+    group = "caddy";
+    extraGroups = [ "firefly-iii" ];
+  };
+  users.groups.caddy = {};
+
+  # ============================================================================
+  # DEVELOPMENT PACKAGES (Host-specific additions)
+  # ============================================================================
+
   environment.systemPackages = with pkgs; [
-    neovim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    wget
-    git
-    swww
-    catppuccin
-    seclists
-    waybar
-    rofi-wayland
-    socat
-    openvpn
-    unzip
-    nnn
-    openssl
-    hyprshade
-    hypridle
-    hyprlock
-    hyprsunset
-    parallel
-    playerctl
-    wlogout
-    envsubst
-    pavucontrol
-    hyprpolkitagent
-    swaynotificationcenter
-    swappy
-    wl-clipboard
-    nodejs_22
-    act
-    discord
-    brave
-    bmon
-    # inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins
-    tmux
-    grimblast
-    fontconfig
-    hyprsome
-    overskride
-    networkmanager_dmenu
-    notion-app-enhanced
-    azuredatastudio
-    noto-fonts
-    corefonts
+    # Task management
     timewarrior
     taskwarrior3
-    kbd
+
+    # Database tools
+    azuredatastudio
+
+    # Cloud tools
+    doctl
+
+    # Build tools
     cmake
     meson
     cpio
-    gcc
-    gnumake
-    nwg-look
+    kbd
+
+    # System tools
     nh
-    catppuccin-gtk
-    trivy
     cheese
-    mosquitto
     bc
-    memos
+    nss.tools
+    openjdk
+
+    # Python for home automation
     python312
     python312Packages.adb-shell
     python312Packages.kegtron-ble
-    esphome 
-    nss.tools
-    openjdk
-    doctl
+
+    # Security
+    trivy
+    seclists
+    openvpn
   ];
 
-  environment.sessionVariables.NIXOS_OZONE_WL="1";
   environment.localBinInPath = true;
 
-  virtualisation.docker.enable = true;
+  # ============================================================================
+  # NH - Nix Helper
+  # ============================================================================
 
   programs.nh = {
     enable = true;
@@ -230,127 +133,84 @@ let
     clean.extraArgs = "--keep-since 4d --keep 3";
     flake = "/home/fernando-carbajal/my-dotfiles/";
   };
-  programs.gnupg.agent = {
+
+  # ============================================================================
+  # FINGERPRINT READER
+  # ============================================================================
+
+  services.fprintd = {
     enable = true;
-    enableSSHSupport = true;
+    tod.enable = true;
+    tod.driver = pkgs.libfprint-2-tod1-goodix;
   };
-  programs.light.enable = true;
-  programs.light.brightnessKeys.enable = true;
-
-
-  programs.hyprland.enable = true;
-  programs.hyprland.xwayland.enable = true; 
-  programs.zsh.enable = true;
-
-  # List services that you want to enable:
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-  # Configure keymap in X11
-  services.xserver.xkb.layout = "latam";
-  # services.xserver.xkb.variant = "latam";
-  # services.xserver.xkb.options = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  services.libinput.enable = true;
-  services.blueman.enable = false;
 
   services.actkbd.enable = true;
-  services.fprintd.enable = true;
-  services.fprintd.tod.enable = true;
-  services.fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
 
- 
+  # ============================================================================
+  # HOMELAB SERVICES (Configured via feature flags)
+  # ============================================================================
 
-services = {
-  #snapserver = {
-  #  enable = false;
-  #  openFirewall = true;
-  #  codec = "flac";
-  #  streams = {
-  #    pipewire  = {
-  #      type = "pipe";
-  #      location = "/run/snapserver/pipewire";
-  #    };
-  #    audio_pipe = {
-  #      type = "pipe";
-  #      location = "/tmp/snapfifo";
-  #      query = {
-  #        name = "Audio Stream";
-  #        codec = "flac";
-  #        sampleformat = "48000:16:2";
-  #      };
-  #    };
-  #  };
-  #  
-  #};
-  avahi = {
-    enable = true;
-    nssmdns4 = true;
-    publish = {
-      enable = true;
-      addresses = true;
-      workstation = true;
-    };
-  };
-  adguardhome = {
+  # All homelab services are configured below with lib.mkIf based on feature flags
+
+  # ============================================================================
+  # ADGUARD HOME DNS
+  # ============================================================================
+
+  services.adguardhome = lib.mkIf (hostConfig.features.adguard or false) {
     enable = true;
     port = 8081;
     mutableSettings = true;
     settings = {
-      http = {
-        # You can select any ip and port, just make sure to open firewalls where needed
-        address = "0.0.0.0:8081";
-      };
+      http.address = "0.0.0.0:8081";
       dns = {
-        bind_hosts = ["192.168.10.149" "127.0.0.1" ];
-        upstream_dns = [
-          "8.8.8.8:53"
-          "1.1.1.1:53"
-        ]; 
+        bind_hosts = ["192.168.10.149" "127.0.0.1"];
+        upstream_dns = [ "8.8.8.8:53" "1.1.1.1:53" ];
       };
       filtering = {
         protection_enabled = true;
         filtering_enabled = true;
-
-        parental_enabled = false;  # Parental control-based DNS requests filtering.
-        safe_search = {
-          enabled = false;  # Enforcing "Safe search" option for search engines, when possible.
-        };
+        parental_enabled = false;
+        safe_search.enabled = false;
         rewrites = [
           { domain = "*.f3rock.local"; answer = "192.168.10.149"; }
         ];
       };
-      # The following notation uses map
-      # to not have to manually create {enabled = true; url = "";} for every filter
-      # This is, however, fully optional
       filters = map(url: { enabled = true; url = url; }) [
-        "https://adguardteam.github.io/HostlistsRegistry/assets/filter_9.txt"  # The Big List of Hacked Malware Web Sites
-        "https://adguardteam.github.io/HostlistsRegistry/assets/filter_11.txt"  # malicious url blocklist
+        "https://adguardteam.github.io/HostlistsRegistry/assets/filter_9.txt"
+        "https://adguardteam.github.io/HostlistsRegistry/assets/filter_11.txt"
         "https://adguardteam.github.io/HostlistsRegistry/assets/filter_33.txt"
         "https://adguardteam.github.io/HostlistsRegistry/assets/filter_48.txt"
         "https://adguardteam.github.io/HostlistsRegistry/assets/filter_57.txt"
       ];
     };
   };
-  go2rtc = {
-    enable = false;
-    settings = {
-      streams = {
-          cam2 = "onvif://admin:kr4m3r072025@192.168.100.4:5000";
-        };
-    };
-  };
-  esphome = {
+
+  # ============================================================================
+  # HOME ASSISTANT
+  # ============================================================================
+
+  services.home-assistant = lib.mkIf (hostConfig.features.homeAssistant or false) {
     enable = true;
-    openFirewall = true;
+    configWritable = true;
+    extraPackages = python3Packages: with python3Packages; [
+      psycopg2
+      adb-shell
+    ];
+    extraComponents = [
+      "isal" "esphome" "met" "radio_browser" "adguard" "device_tracker"
+      "lg_thinq" "stream" "default_config" "androidtv_remote" "cast"
+      "google_translate" "ibeacon" "bluetooth" "bluetooth_adapters"
+      "bluetooth_tracker" "webostv" "ipp" "nmap_tracker" "local_todo"
+      "manual_mqtt" "apple_tv" "mqtt" "google" "google_cloud" "workday"
+      "wyoming" "piper" "mealie" "tailscale" "xiaomi_ble" "androidtv" "youtube"
+    ];
   };
-  firefly-iii = {
+
+  # ============================================================================
+  # FIREFLY III - Personal Finance
+  # ============================================================================
+
+  services.firefly-iii = lib.mkIf (hostConfig.features.fireflyIII or false) {
     enable = true;
     virtualHost = null;
     group = "caddy";
@@ -362,131 +222,28 @@ services = {
       TRUSTED_PROXIES = "127.0.0.1,::1";
     };
   };
-  frigate = {
-    enable = false;
-    hostname = "homec.local";
-    settings= {
-        cameras = {
-          frontcam = {
-              ffmpeg = {
-                inputs = [{
-                    path = "rtsp://127.0.0.1:8554/cam2";
-                    input_args = "preset-rtsp-restream";
-                    roles = [ "record" "detect" ];
-                  }];
-              };
-              detect = {
-                  enabled = true;
-                  width = 1280;
-                  height = 720;
-                  fps = 5;
-              };
-              live = {
-                stream_name = "cam2";
-              };
-              # zones = {
-              #   test_zone = {
-              #   };
-              # };
-            };
-          };
-      };
-  };
-  home-assistant = {
-      enable = true;
-      config = null;
-      configWritable = true;
-      # configDir = "/etc/home-assistant/";
-      extraPackages = python3Packages: with python3Packages; [
-        psycopg2
-        adb-shell
-      ];
-      extraComponents = [
-        "isal"
-        "esphome"
-        "met"
-        "radio_browser"
-        "adguard"
-        "device_tracker"
-        "lg_thinq"
-        "stream"
-        "default_config"
-        "androidtv_remote"
-        "cast"
-        "google_translate"
-        "ibeacon"
-        "bluetooth"
-        "bluetooth_adapters"
-        "bluetooth_tracker"
-        "webostv"
-        "ipp"
-        "nmap_tracker"
-        "local_todo"
-        "manual_mqtt"
-        "apple_tv"
-        "mqtt"
-        "google"
-        "google_cloud"
-        "workday"
-        "wyoming"
-        "piper"
-        "mealie"
-        "tailscale"
-        "xiaomi_ble"
-        "androidtv"
-        "youtube"
-      ];
-  };
 
+  # ============================================================================
+  # CADDY WEB SERVER
+  # ============================================================================
 
-  wyoming.piper.servers = {
-    principal = {
-      enable = true;
-      uri = "tcp://0.0.0.0:10200";
-      voice = "en_US-arctic-medium";
-      speaker = 2;
-    };
-    principal2 = {
-      enable = true;
-      uri = "tcp://0.0.0.0:10201";
-      voice = "en_US-amy-medium";
-    };
-  };
-
-  mealie = {
+  services.caddy = lib.mkIf (hostConfig.features.caddy or false) {
     enable = true;
-    port = 8083;
-  };
-
-  tailscale = {
-    enable = true;
-    openFirewall = true;
-    useRoutingFeatures = "server";
-    permitCertUid = "caddy";
-    authKeyFile = "/home/${username}/tailscale_key";
-  };
-
-  caddy = {
-    enable = true;
-    globalConfig = ''
-        skip_install_trust
-    '';
     user = "caddy";
     group = "caddy";
-
     virtualHosts = {
       "finance.f3rock.local" = {
-          extraConfig  = ''
-            root * ${config.services.firefly-iii.package}/public
-            php_fastcgi unix/${config.services.phpfpm.pools.firefly-iii.socket} {
-            }
-            file_server
-            tls internal
-          '';
+        extraConfig = ''
+          root * ${config.services.firefly-iii.package}/public
+          php_fastcgi unix/${config.services.phpfpm.pools.firefly-iii.socket} {
+          }
+          file_server
+          tls internal
+        '';
       };
       "ha.${config.networking.hostName}.tail337b8f.ts.net" = {
-          extraConfig = "reverse_proxy 127.0.0.1:8123";
-        };
+        extraConfig = "reverse_proxy 127.0.0.1:8123";
+      };
       "ha.f3rock.local" = {
         extraConfig = ''
           tls internal
@@ -501,93 +258,128 @@ services = {
       };
     };
   };
-};
 
-systemd.tmpfiles.rules = [
-  "p /tmp/snapfifo 0666 root root - -"
-];
+  # ============================================================================
+  # TAILSCALE VPN
+  # ============================================================================
 
-#systemd.user.services.snapcast-sink = {
-#    wantedBy = [
-#      "pipewire.service"
-#    ];
-#    after = [
-#      "pipewire.service"
-#    ];
-#    bindsTo = [
-#      "pipewire.service"
-#    ];
-#    path = with pkgs; [
-#      gawk
-#      pulseaudio
-#    ];
-#    script = ''
-#      pactl load-module module-pipe-sink file=/run/snapserver/pipewire sink_name=Snapcast format=s16le rate=48000
-#    '';
-#  };
-#systemd.user.services.snapclient-local = {
-#    wantedBy = [
-#      "pipewire.service"
-#    ];
-#    after = [
-#      "pipewire.service"
-#    ];
-#    serviceConfig = {
-#      ExecStart = "${pkgs.snapcast}/bin/snapclient -h ::1";
-#    };
-#  };
-system.activationScripts.setup_keyfile = ''
+  services.tailscale = lib.mkIf (hostConfig.features.tailscale or false) {
+    enable = true;
+    useRoutingFeatures = "server";
+    permitCertUid = "caddy";
+    authKeyFile = "/home/${username}/tailscale_key";
+  };
+
+  # ============================================================================
+  # WYOMING PIPER (Voice synthesis)
+  # ============================================================================
+
+  services.wyoming.piper.servers = {
+    principal = {
+      enable = lib.mkDefault false;
+      uri = "tcp://0.0.0.0:10200";
+      voice = "en_US-arctic-medium";
+      speaker = 2;
+    };
+    principal2 = {
+      enable = lib.mkDefault false;
+      uri = "tcp://0.0.0.0:10201";
+      voice = "en_US-amy-medium";
+    };
+  };
+
+  # ============================================================================
+  # SHAIRPORT-SYNC (AirPlay receiver)
+  # ============================================================================
+
+  services.shairport-sync = {
+    enable = lib.mkDefault true;
+    openFirewall = true;
+    arguments = "-o alsa";
+  };
+
+  # ============================================================================
+  # GO2RTC (WebRTC streaming)
+  # ============================================================================
+
+  services.go2rtc = {
+    enable = false;
+    settings = {
+      streams = {
+        cam2 = "onvif://admin:kr4m3r072025@192.168.100.4:5000";
+      };
+    };
+  };
+
+  # ============================================================================
+  # FRIGATE (NVR)
+  # ============================================================================
+
+  services.frigate = {
+    enable = false;
+    hostname = "homec.local";
+    settings = {
+      cameras = {
+        frontcam = {
+          ffmpeg = {
+            inputs = [{
+              path = "rtsp://127.0.0.1:8554/cam2";
+              input_args = "preset-rtsp-restream";
+              roles = [ "record" "detect" ];
+            }];
+          };
+          detect = {
+            enabled = true;
+            width = 1280;
+            height = 720;
+            fps = 5;
+          };
+          live.stream_name = "cam2";
+        };
+      };
+    };
+  };
+
+  # ============================================================================
+  # SYSTEMD SERVICES CONFIGURATION
+  # ============================================================================
+
+  systemd.services = {
+    frigate.serviceConfig.SupplementaryGroups = [ "video" ];
+    caddy.after = ["tailscale.service"];
+    caddy.path = with pkgs; [ sudo coreutils nss.tools ];
+    caddy.environment.JAVA_HOME = "${pkgs.openjdk}/lib/openjdk";
+  };
+
+  systemd.tmpfiles.rules = [
+    "p /tmp/snapfifo 0666 root root - -"
+  ];
+
+  # ============================================================================
+  # ACTIVATION SCRIPTS
+  # ============================================================================
+
+  system.activationScripts.setup_keyfile = ''
     echo "mysecretpasswordmysecretpassword" > /appkeyfile
     chown caddy:caddy /appkeyfile
     chmod -R 775 /var/lib/firefly-iii/storage
     chown -R caddy:caddy /var/lib/firefly-iii/storage
   '';
 
-  systemd.services = {
-    frigate = {
-        serviceConfig = {
-            SupplementaryGroups = [ "video" ];
-      };
-    };
-    caddy.after = ["tailscale.service"];
-    caddy.path = with pkgs; [ sudo coreutils nss.tools ];
-    caddy.environment.JAVA_HOME = "${pkgs.openjdk}/lib/openjdk";
- 
-    #adguardhome.after = ["network-online.target"];
+  # ============================================================================
+  # FIREWALL
+  # ============================================================================
+
+  networking.firewall = {
+    allowedTCPPorts = [ 53 853 443 8081 8123 80 8080 8083 8084 8085 ];
+    allowedUDPPorts = [ 53 67 68 853 546 547 ];
+    trustedInterfaces = ["tailscale0"];
+    checkReversePath = "loose";
   };
 
-  # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 53 853 443 8081 8123 80 8080 8083 8084 8085 ];
-  networking.firewall.allowedUDPPorts = [ 53 67 68 853 546 547 ];
-  networking.firewall.trustedInterfaces = ["tailscale0"];
-  networking.firewall.checkReversePath = "loose";
- 
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
+  # ============================================================================
+  # SYSTEM STATE VERSION
+  # ============================================================================
 
-  # Copy the NixOS configuration file and link it from the resulting system
-  # (/run/current-system/configuration.nix). This is useful in case you
-  # accidentally delete configuration.nix.
-  # system.copySystemConfiguration = true;
-
-  # This option defines the first version of NixOS you have installed on this particular machine,
-  # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
-  #
-  # Most users should NEVER change this value after the initial install, for any reason,
-  # even if you've upgraded your system to a new NixOS release.
-  #
-  # This value does NOT affect the Nixpkgs version your packages and OS are pulled from,
-  # so changing it will NOT upgrade your system - see https://nixos.org/manual/nixos/stable/#sec-upgrading for how
-  # to actually do that.
-  #
-  # This value being lower than the current NixOS release does NOT mean your system is
-  # out of date, out of support, or vulnerable.
-  #
-  # Do NOT change this value unless you have manually inspected all the changes it would make to your configuration,
-  # and migrated your data accordingly.
-  #
-  # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "24.11"; # Did you read the comment?
-
+  system.stateVersion = "24.11";
 }
-
