@@ -92,25 +92,8 @@
           };
         };
 
-        # Comprehensive checks for all configurations
-        checks = lib.mkMerge [
-          # Deploy-rs checks for deployment configurations
-          (inputs.deploy-rs.lib.${system}.deployChecks self.deploy)
-
-          # Darwin configuration checks (only on darwin systems)
-          (lib.optionalAttrs (lib.hasInfix "darwin" system) {
-            darwin-aarch64 = self.darwinConfigurations.aarch64.system;
-            darwin-x86_64 = self.darwinConfigurations.x86_64.system;
-            darwin-macbook-pro = self.darwinConfigurations.macbook-pro.system;
-          })
-
-          # NixOS configuration checks (only on linux systems)
-          (lib.optionalAttrs (lib.hasInfix "linux" system) {
-            nixos-n1co = self.nixosConfigurations.n1co.config.system.build.toplevel;
-            nixos-home_laptop = self.nixosConfigurations.home_laptop.config.system.build.toplevel;
-            nixos-digitalocean = self.nixosConfigurations.digitalocean.config.system.build.toplevel;
-          })
-        ];
+        # Deploy-rs checks only (avoids building all configurations on every deployment)
+        checks = inputs.deploy-rs.lib.${system}.deployChecks self.deploy;
 
         # Formatter for `nix fmt`
         formatter = pkgs.alejandra;

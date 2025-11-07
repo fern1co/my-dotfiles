@@ -3,7 +3,7 @@
 
 {
   # Docker for containerized services
-  virtualisation.docker.enable = lib.mkDefault true;
+  virtualisation.docker.enable = lib.mkForce true;
 
   # Avahi for local network discovery
   services.avahi = {

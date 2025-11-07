@@ -54,7 +54,6 @@
     hyprsome          # Workspace management
 
     # Rofi for Wayland
-    rofi-wayland
 
     # Desktop utilities
     pavucontrol       # Audio control

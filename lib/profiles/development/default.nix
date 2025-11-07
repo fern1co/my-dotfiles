@@ -40,7 +40,7 @@
     btop
   ];
 
-  # Docker configuration (if enabled)
+  # Docker configuration (disabled by default, enable in host config or homelab profile)
   virtualisation.docker = {
     enable = lib.mkDefault false;
     # Auto-prune images weekly

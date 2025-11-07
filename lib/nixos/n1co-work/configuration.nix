@@ -106,7 +106,6 @@ let
     catppuccin
     seclists
     waybar
-    rofi-wayland
     socat
     openvpn
     unzip
