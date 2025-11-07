@@ -5,7 +5,7 @@
   # DigitalOcean VPS
   digitalocean = {
     # Network configuration
-    hostname = "64.225.51.178";
+    hostname = "159.203.69.154";
     domain = null; # Optional: set to your domain name
 
     # SSH configuration
