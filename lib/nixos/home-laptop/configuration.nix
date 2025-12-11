@@ -122,6 +122,14 @@ in
     trivy
     seclists
     openvpn
+
+    (writeShellScriptBin "install-hacs" ''
+      #!/usr/bin/env bash
+      cd /var/lib/hass/custom_components
+      sudo -u hass git clone https://github.com/hacs/integration.git hacs
+      sudo systemctl restart home-assistant.service
+      echo "✅ HACS instalado"
+    '')
   ];
 
   environment.localBinInPath = true;
@@ -205,8 +213,18 @@ in
       "google_translate" "ibeacon" "bluetooth" "bluetooth_adapters"
       "bluetooth_tracker" "webostv" "ipp" "nmap_tracker" "local_todo"
       "manual_mqtt" "apple_tv" "mqtt" "google" "google_cloud" "workday"
-      "wyoming" "piper" "mealie" "tailscale" "xiaomi_ble" "androidtv" "youtube"
+      "wyoming" "piper" "mealie" "tailscale" "xiaomi_ble" "androidtv" "youtube" "homekit_controller"
     ];
+  };
+
+  systemd.tmpfiles.rules = [
+    "d /var/lib/hass 0755 hass hass -"
+    "d /var/lib/hass/custom_components 0755 hass hass -"
+    "d /var/lib/hass/.storage 0755 hass hass -"
+  ];
+  
+  systemd.services.home-assistant.serviceConfig = {
+    ReadWritePaths = [ "/var/lib/hass" ];
   };
 
   # ============================================================================
@@ -354,10 +372,6 @@ in
     caddy.environment.JAVA_HOME = "${pkgs.openjdk}/lib/openjdk";
   };
 
-  systemd.tmpfiles.rules = [
-    "p /tmp/snapfifo 0666 root root - -"
-  ];
-
   # ============================================================================
   # ACTIVATION SCRIPTS
   # ============================================================================
@@ -374,7 +388,7 @@ in
   # ============================================================================
 
   networking.firewall = {
-    allowedTCPPorts = [ 53 853 443 8081 8123 80 8080 8083 8084 8085 ];
+    allowedTCPPorts = [ 22 53 853 443 8081 8123 80 8080 8083 8084 8085 ];
     allowedUDPPorts = [ 53 67 68 853 546 547 ];
     trustedInterfaces = ["tailscale0"];
     checkReversePath = "loose";
@@ -385,4 +399,4 @@ in
   # ============================================================================
 
   system.stateVersion = "24.11";
-}
+  }
