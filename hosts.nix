@@ -9,7 +9,7 @@
     domain = null; # Optional: set to your domain name
 
     # SSH configuration
-    sshUser = "ferock";
+    sshUser = "root";
     sshPort = 22;
     deployUser = "root";
 
