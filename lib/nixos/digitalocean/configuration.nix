@@ -13,7 +13,7 @@ in
 {
   imports = [
     # Secrets configuration
-    (import ./secrets.nix { inherit inputs; inherit username; })
+    #(import ./secrets.nix { inherit inputs; inherit username; })
 
     # Hardware configuration
     ./hardware.nix
