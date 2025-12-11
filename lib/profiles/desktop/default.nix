@@ -59,6 +59,8 @@
     # Theme and appearance
     nwg-look
     catppuccin-gtk
+
+    claude-code
   ];
 
   # ZSH shell
