@@ -115,6 +115,9 @@ in
     python312Packages.adb-shell
     python312Packages.kegtron-ble
 
+    # nodejs
+    nodejs_24
+
     # Security
     trivy
     seclists
