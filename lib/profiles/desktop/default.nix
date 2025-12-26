@@ -11,7 +11,7 @@
     nerd-fonts.hack
     nerd-fonts.fira-code
     noto-fonts
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     corefonts
   ];
 
@@ -61,6 +61,7 @@
     catppuccin-gtk
 
     claude-code
+    overskride
   ];
 
   # ZSH shell
