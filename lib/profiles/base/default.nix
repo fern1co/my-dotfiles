@@ -9,7 +9,8 @@
     # Optimize storage
     auto-optimise-store = true;
   };
-
+  
+  services.sshd.enable = true;
   # Essential system packages present on all systems
   environment.systemPackages = with pkgs; [
     git
