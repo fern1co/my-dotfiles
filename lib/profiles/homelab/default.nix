@@ -62,6 +62,11 @@
     openFirewall = true;
   };
 
+  services.music-assistant = {
+    enable = true;
+    providers = ["apple_music" "bluesound" "builtin" "builtin_player" "chromecast" "hass" "hass_players" "dlna" "ytmusic" "radiobrowser"];
+  };
+
   # Homelab packages
   environment.systemPackages = with pkgs; [
     # Monitoring
@@ -77,6 +82,7 @@
 
     # Smart home
     mosquitto  # MQTT broker
+    music-assistant
   ];
 
   # Open common homelab ports (override in host config as needed)

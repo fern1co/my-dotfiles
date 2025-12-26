@@ -10,7 +10,12 @@ let
   defaultUserName = "fernando-carbajal";
 
   # Shared home-manager configuration imported by all systems
-  homeManagerShared = import ./shared/home-manager.nix { inherit inputs;};
+  # Pass the home-manager modules path to avoid relative path issues in flake evaluation
+  homeManagerModulesPath = ../modules/home-manager;
+    #homeManagerShared = import ./shared/home-manager.nix {
+    #  inherit inputs;
+    #  homeManagerModules = homeManagerModulesPath;
+    #};
 in
 {
 # mkDarwin: Creates a nix-darwin (macOS) system configuration
@@ -54,16 +59,24 @@ mkDarwin = {
           home-manager.useUserPackages = true;
 
           # Configure home-manager for the specified user
-          home-manager.users.${username} = { pkgs, ... }: {
-            imports = [
-                # Catppuccin theming
-                inputs.catppuccin.homeModules.catppuccin
-                # Sops secrets for home-manager
-                inputs.sops-nix.homeManagerModules.sops
-                # Shared home-manager configuration
-                (homeManagerShared {inherit git;})
-            ];
-          };
+          home-manager.users.${username} = { pkgs, lib, ... }:
+            let
+              # Try to load machine-specific home.nix if it exists
+              configDir = builtins.dirOf configPath;
+              homeConfigPath = configDir + "/home.nix";
+              hasHomeConfig = builtins.pathExists homeConfigPath;
+            in {
+              imports = [
+                  # Catppuccin theming
+                  inputs.catppuccin.homeModules.catppuccin
+                  # Sops secrets for home-manager
+                  inputs.sops-nix.homeManagerModules.sops
+                  # Shared home-manager configuration
+                  # (homeManagerShared {inherit git;})
+              ] ++ (if hasHomeConfig
+                    then [ (import homeConfigPath { inherit lib inputs username; }) ]
+                    else []);
+            };
         }
     ];
   };
@@ -110,18 +123,24 @@ mkNixos = {
           home-manager.useUserPackages = true;
 
           # Configure home-manager for the specified user
-          home-manager.users."${username}" = { pkgs, ... }: {
-            imports = [
-              # Sops secrets for home-manager
-              inputs.sops-nix.homeManagerModules.sops
-              # Catppuccin theming
-              inputs.catppuccin.homeModules.catppuccin
-              # NixOS-specific home-manager config
-              (import ./nixos/home-manager.nix)
-              # Shared home-manager configuration
-              (homeManagerShared {inherit git;})
-            ];
-          };
+          home-manager.users."${username}" = { pkgs, lib, ... }:
+            let
+              # Try to load machine-specific home.nix if it exists
+              configDir = builtins.dirOf configPath;
+              homeConfigPath = configDir + "/home.nix";
+              hasHomeConfig = builtins.pathExists homeConfigPath;
+            in {
+              imports = [
+                # Sops secrets for home-manager
+                inputs.sops-nix.homeManagerModules.sops
+                # Catppuccin theming
+                inputs.catppuccin.homeModules.catppuccin
+                # Shared home-manager configuration
+                # (homeManagerShared {inherit git;})
+              ] ++ (if hasHomeConfig
+                    then [ (import homeConfigPath { inherit lib inputs username; }) ]
+                    else []);
+            };
         }
     ];
   };

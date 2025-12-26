@@ -102,7 +102,7 @@ in
         detect_urls = true;
       };
 
-      theme = cfg.theme;
+      themeFile = cfg.theme;
 
       keybindings = {
         # Window management
@@ -147,10 +147,5 @@ in
         };
       };
     };
-  };
-
-  meta = {
-    maintainers = [ ];
-    platforms = lib.platforms.all;
   };
 }

@@ -1,40 +1,79 @@
-{ inputs }:{git}:{ pkgs, ...}:
+{ inputs, homeManagerModules }:{git}:{ pkgs, ...}:
 let
   system = pkgs.system;
   dotnet = (with pkgs.dotnetCorePackages; combinePackages [
       sdk_8_0
     ]);
 in {
-  home.packages = with pkgs; [
-    fd jq k9s kubectl lazydocker ripgrep kubernetes-helm
-    google-cloud-sdk go cargo gh gcc google-chrome nss
-    nerd-fonts.hack
-    dotnet
+  # Import home-manager modules for unified configuration
+  # Path passed from lib/default.nix to avoid relative path resolution issues
+  imports = [
+    homeManagerModules
   ];
 
-  home.sessionVariables = {
-    EDITOR = "nvim";
-    DOTNET_ROOT = dotnet;
+  # Enable unified development environment
+  programs.devEnvironment = {
+    enable = true;
+
+    # Languages used in this environment
+    languages = [ "go" "rust" ];
+
+    # Enable all tool categories
+    tools = {
+      vcs = true;        # git, gh, lazygit
+      editors = true;    # neovim
+      terminals = true;  # tmux
+      utils = true;      # fd, jq, ripgrep, bat, fzf, lsd, bottom
+      network = true;    # curl, wget
+      containers = true; # kubectl, k9s, helm, lazydocker
+    };
+
+    # Project-specific packages not covered by modules
+    extraPackages = with pkgs; [
+      google-cloud-sdk
+      google-chrome
+      nss
+      dotnet
+    ];
+
+    # Project-specific aliases (module provides standard ones)
+    shellAliases = {
+      "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
+      "k9c" = "kubectl config get-contexts -o name | fzf | xargs -r k9s --context";
+    };
+
+    # Project-specific session variables (module provides EDITOR, etc.)
+    sessionVariables = {
+      DOTNET_ROOT = "${dotnet}";
+    };
+
+    # Enable basic git config (extended below)
+    enableGitConfig = true;
+  };
+
+  # Enable unified terminal configuration
+  programs.terminalConfig = {
+    enable = true;
+    terminal = "kitty";
+    font = {
+      name = "Hack Nerd Font Propo";
+      size = 14;
+    };
+    opacity = 0.9;
+    theme = "Catppuccin-Mocha";
+    enableLigatures = true;
   };
 
   home.stateVersion = "24.11";
 
-  home.shellAliases = {
-    "lg" = "lazygit";
-    "vim" = "nvim";
-    "n" = "nvim";
-    "cat" = "bat";
-    "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
-    "k9c" = "kubectl config get-contexts -o name | fzf | xargs -r k9s --context";
-  };
-  programs.neovim.enable = true;
-
+  # Catppuccin theme integration
   catppuccin.zsh-syntax-highlighting.enable = true;
   catppuccin.tmux.enable = true;
   catppuccin.lazygit.enable = true;
   catppuccin.k9s.enable = true;
   catppuccin.k9s.transparent = true;
 
+  # ZSH configuration (oh-my-zsh specific)
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -48,20 +87,14 @@ in {
     };
   };
 
-  programs.lsd.enable = true;
-
-  programs.bat = {
-    enable = true;
-  };
-
-  programs.bottom.enable = true;
-
+  # direnv with nix integration
   programs.direnv = {
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;
   };
 
+  # Git configuration with project-specific settings
   programs.git =
     pkgs.lib.recursiveUpdate git
     {
@@ -73,16 +106,7 @@ in {
       };
     };
 
-  programs.lazygit.enable = true; 
-
-  programs.fzf = {
-    enable = true;
-    enableZshIntegration = true;
-    tmux = {
-      enableShellIntegration = true;
-    };
-  };
-
+  # K9s with custom plugins
   programs.k9s = {
     enable = true;
     plugins = {
@@ -108,41 +132,19 @@ in {
       };
     };
   };
-  
+
+  # Kitty terminal-specific overrides (terminal module handles base config)
   programs.kitty = {
-    enable = true;
-  	font = {
-	    name = "Hack Nerd Font Propo";
-	    size = 14;
-	  };
-    shellIntegration = {
-      enableZshIntegration = true;
-    };
     settings = {
-      enable_audio_bell = false;
+      # Additional settings not in module
       macos_option_as_alt = false;
-      hide_window_decorations = "titlebar-only";
       single_window_margin_width = 4;
-      disable_ligatures = false;
-      url_style = "curly";
       mouse_hide_wait = 3;
-      detect_urls = true;
       input_delay = 3;
-      sync_to_monitor = true;
-      background_opacity = "0.9";
-    };
-    themeFile = "Catppuccin-Mocha";
-    keybindings = {
-      "ctrl+left" = "neighboring_window left";
-      "ctrl+right" = "neighboring_window right";
-      "ctrl+up" = "neighboring_window up";
-      "ctrl+down" = "neighboring_window down";
-      "ctrl+shift+z" = "toggle_layout stack";
-      "ctrl+shift+t" = "new_tab_with_cwd";
-      "ctrl+shift+enter" = "new_window_with_cwd";
     };
   };
 
+  # tmux with advanced configuration
   programs.tmux = {
     prefix = "C-a";
     enable = true;
@@ -182,4 +184,3 @@ in {
     '';
   };
 }
-

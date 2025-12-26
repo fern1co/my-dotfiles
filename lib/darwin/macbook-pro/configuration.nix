@@ -1,37 +1,34 @@
 { inputs, username }:{ pkgs, ... }:
+
+let
+  # Import host metadata
+  hosts = import ../../../hosts.nix;
+  hostConfig = hosts.darwin.macbook-pro;
+
+  # Load profiles from host configuration
+  profileLoader = import ../../profiles/default.nix;
+  profileImports = profileLoader { profiles = hostConfig.profiles; };
+in
 {
   imports = [
     (import ../../shared/secrets-macbookpro.nix { inherit username; inherit inputs; })
-  ];
+  ] ++ profileImports; # Import all profiles defined in hosts.nix
 
-  nixpkgs.config.allowUnfree = true;
-  # programs.zsh.enable = true;
+  # allowUnfree is already set in base profile, no need to duplicate
   system.stateVersion = 5;
   system.primaryUser = username;
   users.users.${username} = {
-    # isNormalUser = true;
     home = "/Users/${username}";
-    # shell = pkgs.zsh;
   };
+
+  # macOS-specific packages not covered by profiles
   environment.systemPackages = with pkgs; [
-        neovim
-        curl
-        coreutils
-        wget 
-        vim
-        jq
-        cargo
-        ripgrep
-        air 
-        templ
-        aerospace
-        skhd
-        sketchybar
-        ngrok
-        python314
-        gemini-cli
-        claude-code
-        sops
+    aerospace
+    skhd
+    sketchybar
+    gemini-cli
+    claude-code
+    openvpn
   ];
 
   security.pam.services.sudo_local.touchIdAuth = true;
@@ -116,4 +113,6 @@
 
   services.skhd.enable = true;
   services.sketchybar = {
-    enable = true; 
+    enable = true;
+  };
+}

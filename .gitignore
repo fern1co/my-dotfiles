@@ -54,6 +54,10 @@ Temporary Items
 *.img
 *.iso
 
+# Generated system images (DigitalOcean, etc)
+image*.gz
+*.gz
+
 # Temporary files
 tmp/
 temp/

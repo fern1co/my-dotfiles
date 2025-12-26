@@ -160,19 +160,19 @@ in
     home.shellAliases = cfg.shellAliases;
 
     # Shell functions
-    programs.zsh.initExtra = mkIf (cfg.shellFunctions != {}) (
-      concatStringsSep "\n" (mapAttrsToList (name: body: ''
+    programs.zsh.initContent = mkIf (cfg.shellFunctions != {}) (
+      mkBefore (concatStringsSep "\n" (mapAttrsToList (name: body: ''
         ${name}() {
           ${body}
         }
-      '') cfg.shellFunctions)
+      '') cfg.shellFunctions))
     );
 
-    # Environment variables
-    home.sessionVariables = cfg.sessionVariables;
-
-    # Language-specific environment variables
+    # Environment variables (user-defined + language-specific)
     home.sessionVariables = mkMerge [
+      # User-defined variables
+      cfg.sessionVariables
+
       # Node.js
       (mkIf (elem "javascript" cfg.languages) {
         NODE_OPTIONS = "--max-old-space-size=4096";
@@ -224,10 +224,5 @@ in
     programs.lazygit = mkIf cfg.tools.vcs {
       enable = true;
     };
-  };
-
-  meta = {
-    maintainers = [ ];
-    platforms = lib.platforms.all;
   };
 }

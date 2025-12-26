@@ -18,6 +18,14 @@
     wget
     htop
     neovim
+    unzip
+    lunarvim
+    tree-sitter
+    ripgrep
+    cargo
+
+    nerd-fonts.fira-code
+    font-awesome
   ];
 
   # Basic environment variables

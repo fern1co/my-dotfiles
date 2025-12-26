@@ -12,7 +12,7 @@
   # X11 for compatibility
   services.xserver = {
     enable = true;
-    xkb.layout = lib.mkDefault "us";
+    xkb.layout = lib.mkDefault "latam";
   };
 
   # Audio with Pipewire
@@ -44,6 +44,7 @@
     swappy            # Screenshot editor
     wl-clipboard      # Clipboard
     grimblast         # Screenshots
+    waypaper
 
     # Hyprland utilities
     hyprshade         # Blue light filter
@@ -52,13 +53,21 @@
     hyprsunset        # Sunset/sunrise
     hyprpolkitagent   # Polkit agent
     hyprsome          # Workspace management
+    hyprpaper
+
+    nwg-look
+    nwg-displays
 
     # Rofi for Wayland
+    rofi
+    rofi-network-manager
+    rofi-bluetooth
 
     # Desktop utilities
     pavucontrol       # Audio control
     playerctl         # Media control
     networkmanager_dmenu  # Network menu
+
   ];
 
   # Session variables for Wayland

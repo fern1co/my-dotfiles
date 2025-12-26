@@ -1,35 +1,44 @@
-{ inputs, username }:{ pkgs, ... }:
+{ inputs, username }:{ pkgs, system, ... }:
+
+let
+  # Determine which Darwin host we're using based on system architecture
+  # This assumes this config is used by aarch64 and x86_64 generic hosts
+  hosts = import ../../hosts.nix;
+  hostConfig = if system == "aarch64-darwin"
+    then hosts.darwin.aarch64
+    else hosts.darwin.x86_64;
+
+  # Load profiles from host configuration
+  profileLoader = import ../profiles/default.nix;
+  profileImports = profileLoader { profiles = hostConfig.profiles; };
+in
 {
   imports = [
     ../shared/secrets-darwin.nix
-  ];
+  ] ++ profileImports; # Import all profiles defined in hosts.nix
 
   nixpkgs.config.allowUnfree = true;
-  # programs.zsh.enable = true;
   system.stateVersion = 5;
   system.primaryUser = username;
   users.users.${username} = {
-    # isNormalUser = true;
     home = "/Users/${username}";
-    # shell = pkgs.zsh;
   };
+
+  # Darwin-specific packages
   environment.systemPackages = with pkgs; [
-        awscli
-        aerospace
-        skhd
-    #pritunl-client
-        sketchybar
-        doppler
-        ngrok
-        tenv
-        python310
-        cloudlens
-        e1s
-        bagels
-        llama-cpp
-        #claude-code
-        neovim
-        # terragrunt
+    aerospace
+    skhd
+    sketchybar
+    # Cloud tools
+    awscli
+    doppler
+    cloudlens
+    # Infrastructure
+    tenv
+    # Development tools not in profiles
+    e1s
+    bagels
+    llama-cpp
   ];
 
   security.pam.services.sudo_local.touchIdAuth = true;

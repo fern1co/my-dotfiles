@@ -206,23 +206,61 @@ nix fmt
 
 ### Using Modules
 
-Place reusable modules in `modules/`:
+Modules provide type-safe, configurable options for specific software:
+
+**Available Modules**:
+- **Darwin**: `aerospace`, `sketchybar`, `yabai`
+- **NixOS**: `firewall-rules`
+- **Shared**: `dev-environment`
+
+**Example Usage**:
+
+```nix
+# Import module
+imports = [
+  ../../modules/darwin/aerospace.nix
+];
+
+# Configure it
+programs.aerospace = {
+  enable = true;
+  gaps = { inner = 10; outer = 10; };
+  keybindings = {
+    "cmd-h" = "focus left";
+    "cmd-l" = "focus right";
+  };
+};
+```
+
+**Create Your Own Module**:
 
 ```nix
 # modules/shared/my-module.nix
 { config, lib, pkgs, ... }:
+
+with lib;
+
+let
+  cfg = config.programs.myModule;
+in
 {
-  # Module configuration
+  options.programs.myModule = {
+    enable = mkEnableOption "My Module";
+
+    setting = mkOption {
+      type = types.str;
+      default = "value";
+      description = "A configurable setting";
+    };
+  };
+
+  config = mkIf cfg.enable {
+    environment.systemPackages = [ pkgs.myPackage ];
+  };
 }
 ```
 
-Import in your configuration:
-
-```nix
-imports = [
-  ../../modules/shared/my-module.nix
-];
-```
+See [docs/MODULES_GUIDE.md](docs/MODULES_GUIDE.md) for complete guide and [examples/modules-usage.nix](examples/modules-usage.nix) for usage examples.
 
 ### Home Manager
 
@@ -251,11 +289,20 @@ Ensure sops secrets are properly configured and age key is accessible.
 
 ## 📚 Additional Documentation
 
-- [Backup Strategy](docs/BACKUP-STRATEGY.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Secrets Management](secrets/README.md)
-- [Modules Guide](modules/README.md)
-- [Profiles Guide](profiles/README.md)
+### Guides
+- **[Modules Guide](docs/MODULES_GUIDE.md)** - Complete guide to creating custom modules
+- **[Profiles Guide](PROFILES.md)** - Using and creating configuration profiles
+- **[Architecture](ARCHITECTURE.md)** - System architecture overview
+- **[Migration Guide](MIGRATION.md)** - Migrating configurations to profile system
+
+### Deployment & Operations
+- [Deploy-rs Guide](README-DEPLOY.md) - Remote deployment with deploy-rs
+- [Backup Strategy](docs/BACKUP-STRATEGY.md) - Backup and recovery
+- [Secrets Management](secrets/README.md) - Managing encrypted secrets with sops-nix
+
+### Examples
+- [Module Usage Examples](examples/modules-usage.nix) - Complete module usage examples
+- [More Examples](examples/) - Additional configuration examples
 
 ## 🤝 Contributing
 
