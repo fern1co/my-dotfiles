@@ -6,9 +6,10 @@
   # Enable flakes and nix-command
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    # Optimize storage
-    auto-optimise-store = true;
   };
+
+  # Optimize storage (correct option for nix-darwin)
+  nix.optimise.automatic = true;
 
   # Essential system packages present on all systems
   environment.systemPackages = with pkgs; [
