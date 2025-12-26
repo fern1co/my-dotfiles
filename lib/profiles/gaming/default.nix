@@ -3,6 +3,9 @@
 environment.systemPackages = with pkgs; [
   retroarch
   ppsspp
-  polphin-emu
+  dolphin-emu
+  papermc
 ];
+
+programs.gamemode.enable = true;
 }
