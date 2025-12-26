@@ -1,0 +1,250 @@
+{ config, lib, pkgs, ... }:
+
+with lib;
+
+let
+  cfg = config.programs.aerospace;
+
+  # Convert Nix configuration to TOML format for aerospace
+  toTOML = attrs:
+    let
+      toTOMLValue = v:
+        if isBool v then (if v then "true" else "false")
+        else if isInt v then toString v
+        else if isString v then ''"${v}"''
+        else if isList v then "[${concatStringsSep ", " (map toTOMLValue v)}]"
+        else if isAttrs v then toTOMLAttrs v
+        else throw "Unsupported type for TOML conversion";
+
+      toTOMLAttrs = attrs:
+        let
+          lines = mapAttrsToList (k: v: "${k} = ${toTOMLValue v}") attrs;
+        in "{ ${concatStringsSep ", " lines} }";
+    in
+      concatStringsSep "\n" (mapAttrsToList (k: v:
+        if isAttrs v then ''
+          [${k}]
+          ${concatStringsSep "\n" (mapAttrsToList (k2: v2: "${k2} = ${toTOMLValue v2}") v)}
+        ''
+        else "${k} = ${toTOMLValue v}"
+      ) attrs);
+
+  # Default keybindings for aerospace
+  defaultKeybindings = {
+    # Focus windows
+    "alt-h" = "focus left";
+    "alt-j" = "focus down";
+    "alt-k" = "focus up";
+    "alt-l" = "focus right";
+
+    # Move windows
+    "alt-shift-h" = "move left";
+    "alt-shift-j" = "move down";
+    "alt-shift-k" = "move up";
+    "alt-shift-l" = "move right";
+
+    # Resize mode
+    "alt-r" = "mode resize";
+
+    # Workspace switching
+    "alt-1" = "workspace 1";
+    "alt-2" = "workspace 2";
+    "alt-3" = "workspace 3";
+    "alt-4" = "workspace 4";
+    "alt-5" = "workspace 5";
+
+    # Move to workspace
+    "alt-shift-1" = "move-node-to-workspace 1";
+    "alt-shift-2" = "move-node-to-workspace 2";
+    "alt-shift-3" = "move-node-to-workspace 3";
+    "alt-shift-4" = "move-node-to-workspace 4";
+    "alt-shift-5" = "move-node-to-workspace 5";
+  };
+
+in
+{
+  options.programs.aerospace = {
+    enable = mkEnableOption "AeroSpace tiling window manager";
+
+    package = mkOption {
+      type = types.package;
+      default = pkgs.aerospace;
+      defaultText = literalExpression "pkgs.aerospace";
+      description = "The aerospace package to use.";
+    };
+
+    startAtLogin = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to start AeroSpace at login.";
+    };
+
+    settings = mkOption {
+      type = types.attrs;
+      default = {};
+      example = literalExpression ''
+        {
+          gaps = {
+            inner = 8;
+            outer = 8;
+          };
+          mode = {
+            main = {
+              binding = {
+                cmd-h = "focus left";
+                cmd-l = "focus right";
+              };
+            };
+          };
+        }
+      '';
+      description = ''
+        Configuration for AeroSpace in Nix attribute set format.
+        Will be converted to TOML configuration file.
+      '';
+    };
+
+    keybindings = mkOption {
+      type = types.attrsOf types.str;
+      default = defaultKeybindings;
+      example = literalExpression ''
+        {
+          "alt-h" = "focus left";
+          "alt-l" = "focus right";
+          "alt-enter" = "exec-and-forget open -a kitty";
+        }
+      '';
+      description = ''
+        Key bindings for AeroSpace.
+        Keys are in the format "modifier-key" and values are aerospace commands.
+      '';
+    };
+
+    gaps = {
+      inner = mkOption {
+        type = types.int;
+        default = 8;
+        description = "Inner gap between windows in pixels.";
+      };
+
+      outer = mkOption {
+        type = types.int;
+        default = 8;
+        description = "Outer gap from screen edge in pixels.";
+      };
+    };
+
+    workspaces = mkOption {
+      type = types.listOf types.int;
+      default = [ 1 2 3 4 5 ];
+      description = "List of workspace numbers to configure.";
+    };
+
+    autoLayout = mkOption {
+      type = types.enum [ "tiles" "accordion" "horizontal" "vertical" ];
+      default = "tiles";
+      description = "Default automatic layout algorithm.";
+    };
+
+    enableSoundEffects = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Whether to enable sound effects for window operations.";
+    };
+
+    extraConfig = mkOption {
+      type = types.lines;
+      default = "";
+      example = ''
+        [mode.resize.binding]
+        h = "resize width -50"
+        l = "resize width +50"
+        k = "resize height -50"
+        j = "resize height +50"
+      '';
+      description = ''
+        Extra configuration to append to the aerospace config file.
+        Use this for advanced configurations not covered by the options above.
+      '';
+    };
+  };
+
+  config = mkIf cfg.enable {
+    # Install aerospace package
+    environment.systemPackages = [ cfg.package ];
+
+    # Create aerospace configuration file
+    home-manager.users = mkIf config.home-manager.useGlobalPkgs {
+      ${config.users.primaryUser.username} = {
+        home.file.".aerospace.toml".text = ''
+          # AeroSpace configuration generated by Nix
+          # See: https://github.com/nikitabobko/AeroSpace
+
+          # Basic settings
+          start-at-login = ${if cfg.startAtLogin then "true" else "false"}
+          enable-normalization-flatten-containers = true
+          enable-normalization-opposite-orientation-for-nested-containers = true
+
+          # Gaps
+          [gaps]
+          inner.horizontal = ${toString cfg.gaps.inner}
+          inner.vertical = ${toString cfg.gaps.inner}
+          outer.left = ${toString cfg.gaps.outer}
+          outer.bottom = ${toString cfg.gaps.outer}
+          outer.top = ${toString cfg.gaps.outer}
+          outer.right = ${toString cfg.gaps.outer}
+
+          # Default layout
+          default-root-container-layout-algorithm = '${cfg.autoLayout}'
+
+          # Key bindings
+          [mode.main.binding]
+          ${concatStringsSep "\n" (mapAttrsToList (k: v: "${k} = '${v}'") cfg.keybindings)}
+
+          # Additional settings from Nix attrs
+          ${optionalString (cfg.settings != {}) (toTOML cfg.settings)}
+
+          # Extra configuration
+          ${cfg.extraConfig}
+        '';
+      };
+    };
+
+    # Create Launch Agent for aerospace
+    launchd.user.agents.aerospace = mkIf cfg.startAtLogin {
+      serviceConfig = {
+        ProgramArguments = [ "${cfg.package}/bin/aerospace" ];
+        RunAtLoad = true;
+        KeepAlive = true;
+        ProcessType = "Interactive";
+        StandardOutPath = "/tmp/aerospace.log";
+        StandardErrorPath = "/tmp/aerospace.error.log";
+      };
+    };
+
+    # System assertions and warnings
+    assertions = [
+      {
+        assertion = cfg.gaps.inner >= 0;
+        message = "aerospace: gaps.inner must be >= 0";
+      }
+      {
+        assertion = cfg.gaps.outer >= 0;
+        message = "aerospace: gaps.outer must be >= 0";
+      }
+      {
+        assertion = length cfg.workspaces > 0;
+        message = "aerospace: at least one workspace must be configured";
+      }
+    ];
+
+    warnings = optionals (cfg.gaps.inner > 50 || cfg.gaps.outer > 50) [
+      "aerospace: Large gap values (>50px) may not be optimal for usability"
+    ];
+  };
+
+  meta = {
+    maintainers = [ "ferock" ];
+    doc = ./aerospace.md;
+  };
+}
