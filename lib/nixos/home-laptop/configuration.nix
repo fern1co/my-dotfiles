@@ -21,6 +21,9 @@ in
     ../../shared/secrets.nix
   ] ++ profileImports;  # Import all profiles defined in hosts.nix
 
+  nixpkgs.config.permittedInsecurePackages = [
+      "mbedtls-2.28.10"
+  ];
   # ============================================================================
   # BOOT CONFIGURATION
   # ============================================================================
@@ -211,9 +214,10 @@ in
       "isal" "esphome" "met" "radio_browser" "adguard" "device_tracker"
       "lg_thinq" "stream" "default_config" "androidtv_remote" "cast"
       "google_translate" "ibeacon" "bluetooth" "bluetooth_adapters"
-      "bluetooth_tracker" "webostv" "ipp" "nmap_tracker" "local_todo"
+      "webostv" "ipp" "nmap_tracker" "local_todo"
       "manual_mqtt" "apple_tv" "mqtt" "google" "google_cloud" "workday"
-      "wyoming" "piper" "mealie" "tailscale" "xiaomi_ble" "androidtv" "youtube" "homekit_controller"
+      "wyoming" "piper" "mealie" "tailscale" "xiaomi_ble" "androidtv" "youtube" "homekit_controller" "kegtron" "github"
+      "music_assistant"
     ];
   };
 
@@ -388,8 +392,8 @@ in
   # ============================================================================
 
   networking.firewall = {
-    allowedTCPPorts = [ 22 53 853 443 8081 8123 80 8080 8083 8084 8085 ];
-    allowedUDPPorts = [ 53 67 68 853 546 547 ];
+    allowedTCPPorts = [ 22 53 853 443 8081 8123 80 8080 8083 8084 8085 8095 8097 25565 25575];
+    allowedUDPPorts = [ 53 67 68 853 546 547 25565 25575];
     trustedInterfaces = ["tailscale0"];
     checkReversePath = "loose";
   };
