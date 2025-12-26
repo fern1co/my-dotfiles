@@ -6,5 +6,7 @@
         seclists
         whatweb
         tshark
+        #burpsuite
+        aircrack-ng
     ];
 }

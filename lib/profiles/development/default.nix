@@ -6,6 +6,7 @@
   environment.systemPackages = with pkgs; [
     # Version control
     git
+    git-lfs
     gh
 
     # Build tools
@@ -25,7 +26,7 @@
 
     # Debugging and profiling
     gdb
-    valgrind
+    # valgrind - Broken on macOS, only available on Linux
 
     # Network tools
     netcat
@@ -40,19 +41,10 @@
     btop
   ];
 
-  # Docker configuration (disabled by default, enable in host config or homelab profile)
-  virtualisation.docker = {
-    enable = lib.mkDefault false;
-    # Auto-prune images weekly
-    autoPrune = {
-      enable = true;
-      dates = "weekly";
-    };
-  };
+  # Git LFS is installed via environment.systemPackages
+  # Git configuration should be done in home-manager, not system level
 
-  # Git configuration
-  programs.git = {
-    enable = true;
-    lfs.enable = true;
-  };
+  # Note: Docker configuration removed from this profile
+  # - macOS: Use Docker Desktop (installed outside Nix)
+  # - NixOS: Enable virtualisation.docker in host-specific config or homelab profile
 }
