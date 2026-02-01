@@ -76,6 +76,7 @@
       "desktop/hyprland"
       "homelab"
       "gaming"
+        "server"
     ];
 
     role = "workstation";

@@ -130,6 +130,8 @@ mkNixos = {
               homeConfigPath = configDir + "/home.nix";
               hasHomeConfig = builtins.pathExists homeConfigPath;
             in {
+              home.stateVersion = "25.11";
+
               imports = [
                 # Sops secrets for home-manager
                 inputs.sops-nix.homeManagerModules.sops

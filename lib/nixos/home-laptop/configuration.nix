@@ -18,8 +18,14 @@ in
     ./hardware.nix
 
     # Secrets
-    ../../shared/secrets.nix
+    #../../shared/secrets.nix
   ] ++ profileImports;  # Import all profiles defined in hosts.nix
+
+  # Import custom package overlays
+  nixpkgs.overlays = [
+    (import ../../packages/overlay.nix)
+    # Fix for jaraco-test build failure
+  ];
 
   nixpkgs.config.permittedInsecurePackages = [
       "mbedtls-2.28.10"
@@ -112,11 +118,14 @@ in
     bc
     nss.tools
     openjdk
+    wavemon
 
     # Python for home automation
-    python312
-    python312Packages.adb-shell
-    python312Packages.kegtron-ble
+    python310
+    pipenv
+    python313
+    python313Packages.adb-shell
+    python313Packages.kegtron-ble
 
     # nodejs
     nodejs_24
@@ -125,6 +134,14 @@ in
     trivy
     seclists
     openvpn
+
+
+    # DEPLOY TOOLS
+    tenv
+    hcloud
+    k9s
+    kubectl
+    kubernetes-helm
 
     (writeShellScriptBin "install-hacs" ''
       #!/usr/bin/env bash
@@ -143,7 +160,7 @@ in
 
   programs.nh = {
     enable = true;
-    clean.enable = true;
+    #clean.enable = true;
     clean.extraArgs = "--keep-since 4d --keep 3";
     flake = "/home/fernando-carbajal/my-dotfiles/";
   };
@@ -402,5 +419,5 @@ in
   # SYSTEM STATE VERSION
   # ============================================================================
 
-  system.stateVersion = "24.11";
+  system.stateVersion = "25.11";
   }

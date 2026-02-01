@@ -64,7 +64,7 @@ in {
     enableLigatures = true;
   };
 
-  home.stateVersion = "24.11";
+  home.stateVersion = "25.11";
 
   # Catppuccin theme integration
   catppuccin.zsh-syntax-highlighting.enable = true;

@@ -23,6 +23,9 @@
     tree-sitter
     ripgrep
     cargo
+    lazygit
+
+    kitty
 
     nerd-fonts.fira-code
     font-awesome

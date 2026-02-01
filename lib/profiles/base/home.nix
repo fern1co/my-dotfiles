@@ -27,7 +27,13 @@
 
   programs = {
     neovim.enable = true;
-    git.enable = true;
+    git = {
+      enable = true;
+      package = pkgs.git.override { withLibsecret = true; };
+      settings = {
+        credential.helper = "libsecret";
+      };
+    };
     lazygit.enable = true;
     fzf.enable = true;
     tmux.enable = true;

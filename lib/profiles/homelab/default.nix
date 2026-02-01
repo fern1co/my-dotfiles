@@ -64,7 +64,7 @@
 
   services.music-assistant = {
     enable = true;
-    providers = ["apple_music" "bluesound" "builtin" "builtin_player" "chromecast" "hass" "hass_players" "dlna" "ytmusic" "radiobrowser"];
+    providers = ["apple_music" "bluesound" "builtin" "chromecast" "hass" "hass_players" "dlna" "ytmusic" "radiobrowser"];
   };
 
   # Homelab packages
@@ -83,6 +83,7 @@
     # Smart home
     mosquitto  # MQTT broker
     music-assistant
+    rustdesk
   ];
 
   # Open common homelab ports (override in host config as needed)
