@@ -12,8 +12,12 @@
     gcc cargo rustc
     go gopls
     python314 python314Packages.pip
+    python310
     nodejs nodePackages.npm
     (with dotnetCorePackages; combinePackages [ sdk_8_0 ])
+
+    # iAC
+    tenv
 
     # Development Tools
     jq ripgrep fd fzf

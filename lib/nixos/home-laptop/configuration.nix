@@ -95,6 +95,8 @@ in
   # DEVELOPMENT PACKAGES (Host-specific additions)
   # ============================================================================
 
+  inputs.nix-openclaw.packages.${pkgs.system}.openclaw
+
   environment.systemPackages = with pkgs; [
     # Task management
     timewarrior

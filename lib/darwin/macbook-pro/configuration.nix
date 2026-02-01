@@ -29,6 +29,8 @@ in
     gemini-cli
     claude-code
     openvpn
+    tenv
+    hcloud
   ];
 
   security.pam.services.sudo_local.touchIdAuth = true;
