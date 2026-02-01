@@ -95,8 +95,6 @@ in
   # DEVELOPMENT PACKAGES (Host-specific additions)
   # ============================================================================
 
-  inputs.nix-openclaw.packages.${pkgs.system}.openclaw
-
   environment.systemPackages = with pkgs; [
     # Task management
     timewarrior
@@ -144,6 +142,9 @@ in
     k9s
     kubectl
     kubernetes-helm
+
+    # Games
+    inputs.nix-openclaw.packages.${pkgs.system}.openclaw
 
     (writeShellScriptBin "install-hacs" ''
       #!/usr/bin/env bash
