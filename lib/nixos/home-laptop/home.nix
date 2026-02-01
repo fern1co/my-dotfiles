@@ -240,4 +240,31 @@
     };
   };
 
+  # Openclaw configuration
+  programs.openclaw = {
+    enable = true;
+    # Path to your managed documents directory
+    # documents = ./documents;
+
+    # Openclaw configuration (optional - uncomment and configure as needed)
+    # config = {
+    #   channels.telegram = {
+    #     tokenFile = "/path/to/telegram/bot/token";
+    #     allowFrom = [ 123456789 ]; # Your Telegram user ID
+    #     groups = {
+    #       "*" = { requireMention = true; };
+    #     };
+    #   };
+    # };
+
+    # Default instance configuration
+    instances.default = {
+      enable = true;
+      # Add plugins here as needed
+      # plugins = [
+      #   { source = "github:acme/example-plugin"; }
+      # ];
+    };
+  };
+
 }

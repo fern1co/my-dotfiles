@@ -137,6 +137,8 @@ mkNixos = {
                 inputs.sops-nix.homeManagerModules.sops
                 # Catppuccin theming
                 inputs.catppuccin.homeModules.catppuccin
+                # Nix-openclaw home-manager module
+                inputs.nix-openclaw.homeManagerModules.openclaw
                 # Shared home-manager configuration
                 # (homeManagerShared {inherit git;})
               ] ++ (if hasHomeConfig

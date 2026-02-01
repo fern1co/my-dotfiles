@@ -24,6 +24,7 @@ in
   # Import custom package overlays
   nixpkgs.overlays = [
     (import ../../packages/overlay.nix)
+    inputs.nix-openclaw.overlays.default
     # Fix for jaraco-test build failure
   ];
 
@@ -142,9 +143,6 @@ in
     k9s
     kubectl
     kubernetes-helm
-
-    # Games
-    inputs.nix-openclaw.packages.${pkgs.system}.openclaw
 
     (writeShellScriptBin "install-hacs" ''
       #!/usr/bin/env bash
