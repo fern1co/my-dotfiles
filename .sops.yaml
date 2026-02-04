@@ -4,5 +4,5 @@ keys:
 creation_rules:
   - path_regex: secrets\.yaml$
     key_groups:
-      - age:
-          - *main_key
+    - age:
+      - *main_key

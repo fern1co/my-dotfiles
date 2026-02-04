@@ -17,8 +17,11 @@ in
     # Hardware configuration
     ./hardware.nix
 
+    # sops-nix module
+    inputs.sops-nix.nixosModules.sops
+
     # Secrets
-    #../../shared/secrets.nix
+    (import ./secrets.nix { inherit username; })
   ] ++ profileImports;  # Import all profiles defined in hosts.nix
 
   # Import custom package overlays
@@ -100,6 +103,9 @@ in
     # Task management
     timewarrior
     taskwarrior3
+
+    # AI Tools
+    gemini-cli
 
     # Database tools
     azuredatastudio
@@ -410,8 +416,8 @@ in
   # ============================================================================
 
   networking.firewall = {
-    allowedTCPPorts = [ 22 53 853 443 8081 8123 80 8080 8083 8084 8085 8095 8097 25565 25575];
-    allowedUDPPorts = [ 53 67 68 853 546 547 25565 25575];
+    allowedTCPPorts = [ 22 53 853 443 8081 8123 80 8080 8083 8084 8085 8095 8097 25565 25575 18789];
+    allowedUDPPorts = [ 53 67 68 853 546 547 25565 25575 18789];
     trustedInterfaces = ["tailscale0"];
     checkReversePath = "loose";
   };
