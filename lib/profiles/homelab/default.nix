@@ -63,7 +63,7 @@
   };
 
   services.music-assistant = {
-    enable = true;
+    enable = false;
     providers = ["apple_music" "bluesound" "builtin" "chromecast" "hass" "hass_players" "dlna" "ytmusic" "radiobrowser"];
   };
 
@@ -78,12 +78,12 @@
     socat
 
     # Container management
-    docker-compose
+    #docker-compose
 
     # Smart home
-    mosquitto  # MQTT broker
-    music-assistant
-    rustdesk
+    #mosquitto  # MQTT broker
+    #music-assistant
+    #rustdesk
   ];
 
   # Open common homelab ports (override in host config as needed)

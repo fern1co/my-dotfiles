@@ -101,8 +101,8 @@ in
 
   environment.systemPackages = with pkgs; [
     # Task management
-    timewarrior
-    taskwarrior3
+    #timewarrior
+    #taskwarrior3
 
     # AI Tools
     gemini-cli
@@ -126,10 +126,11 @@ in
     nss.tools
     openjdk
     wavemon
+    gparted
 
     # Python for home automation
-    python310
-    pipenv
+    #python310
+    #pipenv
     python313
     python313Packages.adb-shell
     python313Packages.kegtron-ble
@@ -139,7 +140,7 @@ in
 
     # Security
     trivy
-    seclists
+    #seclists
     openvpn
 
 
@@ -149,6 +150,7 @@ in
     k9s
     kubectl
     kubernetes-helm
+    cloudflared
 
     (writeShellScriptBin "install-hacs" ''
       #!/usr/bin/env bash
@@ -260,7 +262,7 @@ in
   # ============================================================================
 
   services.firefly-iii = lib.mkIf (hostConfig.features.fireflyIII or false) {
-    enable = true;
+    enable = false;
     virtualHost = null;
     group = "caddy";
     user = "caddy";
@@ -277,7 +279,7 @@ in
   # ============================================================================
 
   services.caddy = lib.mkIf (hostConfig.features.caddy or false) {
-    enable = true;
+    enable = false;
     user = "caddy";
     group = "caddy";
     virtualHosts = {
@@ -325,13 +327,13 @@ in
 
   services.wyoming.piper.servers = {
     principal = {
-      enable = lib.mkDefault false;
+      enable = true;
       uri = "tcp://0.0.0.0:10200";
       voice = "en_US-arctic-medium";
       speaker = 2;
     };
     principal2 = {
-      enable = lib.mkDefault false;
+      enable = true; 
       uri = "tcp://0.0.0.0:10201";
       voice = "en_US-amy-medium";
     };
@@ -388,6 +390,13 @@ in
       };
     };
   };
+
+ #--token 
+  #services.cloudflared.tunnels = {
+  #    "" = {
+  #        credentials= "";
+  #      };
+  #};
 
   # ============================================================================
   # SYSTEMD SERVICES CONFIGURATION

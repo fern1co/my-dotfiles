@@ -28,6 +28,12 @@
         mode = "0600";
       };
 
+      #"api_keys/cloudflare-tunnel-home-token" = {
+      #    owner = username;
+      #    path = "/home/${username}/.secrets/cloudflare-tunnel-home-token";
+      #    mode = "0600";
+      #};
+
       # Example: GitHub token
       # "api_keys/github_token" = {
       #   owner = username;

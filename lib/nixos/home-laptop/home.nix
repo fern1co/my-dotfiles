@@ -14,6 +14,7 @@
     catppuccin.lazygit.accent = "mauve";
     catppuccin.zsh-syntax-highlighting.enable = true;
     catppuccin.hyprlock.enable = true;
+    catppuccin.hyprlock.useDefaultConfig = false;
 
     programs.gpg.enable = true;
     programs.chromium.enable = true;
