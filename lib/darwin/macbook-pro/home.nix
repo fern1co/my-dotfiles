@@ -27,6 +27,14 @@
         enable = true;
         enableZshIntegration = true;
     };
+    openclaw = {
+      enable = true;
+      plugins = [
+        { source = "github:openclaw/nix-steipete-tools?dir=tools/summarize"; }
+      ];
+      instances.default = {
+      };
+    };
   };
 
 

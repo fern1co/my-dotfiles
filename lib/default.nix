@@ -66,12 +66,15 @@ mkDarwin = {
               homeConfigPath = configDir + "/home.nix";
               hasHomeConfig = builtins.pathExists homeConfigPath;
             in {
+              home.stateVersion = "25.11";
+
               imports = [
                   # Catppuccin theming
                   inputs.catppuccin.homeModules.catppuccin
                   # Sops secrets for home-manager
                   inputs.sops-nix.homeManagerModules.sops
                   # Shared home-manager configuration
+                  inputs.nix-openclaw.homeManagerModules.openclaw
                   # (homeManagerShared {inherit git;})
               ] ++ (if hasHomeConfig
                     then [ (import homeConfigPath { inherit lib inputs username; }) ]

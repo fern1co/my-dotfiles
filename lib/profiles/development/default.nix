@@ -22,7 +22,8 @@
     # Language servers and formatters
     nil # Nix LSP
     nixpkgs-fmt
-    alejandra
+    statix
+    #alejandra
 
     # Debugging and profiling
     gdb
