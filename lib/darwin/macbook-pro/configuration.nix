@@ -26,7 +26,7 @@ in
     aerospace
     skhd
     sketchybar
-    gemini-cli
+    # gemini-cli  # Temporarily disabled due to compiler-rt-libc build failure on x86_64-darwin
     claude-code
     openvpn
     tenv

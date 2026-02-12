@@ -1,5 +1,5 @@
 { lib,inputs, username }:{ pkgs, ... }:{
-  home.stateVersion = "25.05";
+  # home.stateVersion is set in lib/default.nix
 
   home.shellAliases = {
     lg = "lazygit";
@@ -27,14 +27,13 @@
         enable = true;
         enableZshIntegration = true;
     };
-    openclaw = {
-      enable = true;
-      plugins = [
-        { source = "github:openclaw/nix-steipete-tools?dir=tools/summarize"; }
-      ];
-      instances.default = {
-      };
-    };
+    # openclaw = {
+    #   enable = true;
+    #   firstParty = {
+    #     summarize.enable = true;   # Summarize web pages, PDFs, videos
+    #   };
+    #   instances.default = {};
+    # };
   };
 
 
