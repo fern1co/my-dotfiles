@@ -144,6 +144,9 @@
     
     # Reload skhd
     ctrl + alt + cmd - s : skhd --reload
+
+    # sketchybar
+    ctrl + alt + cmd - b : sketchybar --reload
   '';
 
   home.sessionVariables = {

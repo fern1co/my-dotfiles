@@ -151,8 +151,10 @@ in
     };
 
     extraConfig = ''
+      yabai -m config external_bar all:40:0
+
       # Reglas por aplicación
-      yabai -m rule --add app="^System Settings$" manage=off
+      yabai -m rule --add app="^Configuración del Sistema$" manage=off
       yabai -m rule --add app="^Calculator$" manage=off
       yabai -m rule --add app="^Finder$" manage=off
       yabai -m rule --add app="^Activity Monitor$" manage=off
@@ -167,9 +169,13 @@ in
       # borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0 &
     '';
   };
+  fonts.packages = with pkgs; [
+    jetbrains-mono
+  ];
 
   services.skhd.enable = true;
   services.sketchybar = {
     enable = true;
+    package = pkgs.sketchybar;
   };
 }
