@@ -1,0 +1,196 @@
+#!/bin/bash
+source "$HOME/.config/sketchybar/colors.sh"
+
+FONT="JetBrains Mono"
+PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+
+# ──────────────────────────────────────────
+# BAR GLOBAL
+# ──────────────────────────────────────────
+sketchybar --bar \
+  height=45 \
+  color=$BAR_BG \
+  blur_radius=25 \
+  corner_radius=10 \
+  border_width=1 \
+  border_color=$BORDER \
+  shadow=on \
+  position=top \
+  sticky=on \
+  padding_right=10 \
+  padding_left=10 \
+  y_offset=2 \
+  margin=4 \
+  topmost=window
+
+# ──────────────────────────────────────────
+# DEFAULTS GLOBALES
+# ──────────────────────────────────────────
+sketchybar --default \
+  updates=when_shown \
+  icon.font="$FONT:Regular:13.0" \
+  icon.color=$SUBTLE \
+  label.font="$FONT:Medium:13.5" \
+  label.color=$TEXT \
+  padding_left=10 \
+  padding_right=10 \
+  background.corner_radius=8 \
+  background.height=24 \
+  background.border_width=1 \
+  background.border_color=$BORDER
+
+# ──────────────────────────────────────────
+# LEFT — SPACES
+# ──────────────────────────────────────────
+SPACE_LABELS=("TERM" "WEB" "K8S" "MSG" "5" "6")
+SPACE_COLORS=($ACCENT $GREEN $PURPLE $YELLOW $SUBTLE $SUBTLE)
+
+for i in "${!SPACE_LABELS[@]}"; do
+  idx=$((i + 1))
+  sketchybar --add space space.$idx left \
+    --set space.$idx \
+    space=$idx \
+    icon="●" \
+    label=" ${SPACE_LABELS[$i]}" \
+    label.font="$FONT:Bold:12.0" \
+    label.color=$SUBTLE \
+    icon.drawing=on \
+    icon.padding_left=4 \
+    icon.padding_right=2 \
+    label.padding_left=2 \
+    label.padding_right=12 \
+    background.color=$TRANSPARENT \
+    background.border_color=$TRANSPARENT \
+    background.padding_left=6 \
+    background.padding_right=8 \
+    script="$PLUGIN_DIR/spaces.sh $idx ${SPACE_COLORS[$i]}" \
+    --subscribe space.$idx space_change
+
+done
+
+# Separator
+sketchybar --add item separator.left left \
+  --set separator.left \
+  icon="│" \
+  icon.color=$MUTED \
+  icon.font="$FONT:Light:14.0" \
+  icon.drawing=on \
+  label.drawing=off \
+  background.drawing=off \
+  padding_left=4 \
+  padding_right=4 \
+  script="$PLUGIN_DIR/separator_left.sh" \
+  --subscribe separator.left space_change
+
+# Front App
+sketchybar --add item front_app left \
+  --set front_app \
+  icon.drawing=off \
+  label.font="$FONT:Medium:11.0" \
+  label.color=$TEXT \
+  label.padding_left=4 \
+  label.padding_right=4 \
+  background.drawing=off \
+  padding_left=0 \
+  padding_right=0 \
+  script="$PLUGIN_DIR/front_app.sh" \
+  --subscribe front_app front_app_switched
+# ──────────────────────────────────────────
+# CENTER — CLOCK
+# ──────────────────────────────────────────
+sketchybar --add item clock center \
+  --set clock \
+  update_freq=1 \
+  icon.drawing=off \
+  label.font="$FONT:Bold:12.0" \
+  label.color=$BRIGHT \
+  script="$PLUGIN_DIR/clock.sh"
+
+# ──────────────────────────────────────────
+# RIGHT — WIDGETS
+# ──────────────────────────────────────────
+
+# Git
+sketchybar --add item git right \
+  --set git \
+  update_freq=10 \
+  icon="⎇ " \
+  icon.font="$FONT:Regular:11.0" \
+  icon.color=$SUBTLE \
+  label.font="$FONT:Medium:10.0" \
+  background.color=$SURFACE \
+  background.border_color=$BORDER \
+  padding_left=6 \
+  padding_right=6 \
+  script="$PLUGIN_DIR/git.sh" \
+  --subscribe git front_app_switched window_focus
+
+# Separator
+sketchybar --add item separator.r1 right \
+  --set separator.r1 \
+  icon="|" \
+  icon.color=$BORDER \
+  icon.font="$FONT:Bold:14.0" \
+  label.drawing=off \
+  background.drawing=off
+
+# Battery
+sketchybar --add item battery right \
+  --set battery \
+  update_freq=60 \
+  icon.drawing=on \
+  icon.font="$FONT:Light:14.0" \
+  script="$PLUGIN_DIR/battery.sh" \
+  --subscribe battery system_woke power_source_change
+
+# Volume
+sketchybar --add item volume right \
+  --set volume \
+  update_freq=5 \
+  icon.drawing=off \
+  icon.font="$FONT:Light:14.0" \
+  script="$PLUGIN_DIR/volume.sh" \
+  --subscribe volume volume_change
+
+# Separator
+sketchybar --add item separator.r2 right \
+  --set separator.r2 \
+  icon="│" \
+  icon.color=$BORDER \
+  icon.font="$FONT:Light:14.0" \
+  label.drawing=off \
+  background.drawing=off
+
+# Network
+sketchybar --add item network right \
+  --set network \
+  update_freq=3 \
+  icon.drawing=off \
+  label.font="$FONT:Regular:10.0" \
+  icon.font="$FONT:Semibold:22.0" \
+  script="$PLUGIN_DIR/network.sh"
+
+# Memory
+sketchybar --add item memory right \
+  --set memory \
+  update_freq=5 \
+  icon="◈ " \
+  icon.color=$PURPLE \
+  label.color=$PURPLE \
+  icon.font="$FONT:Semibold:22.0" \
+  script="$PLUGIN_DIR/memory.sh"
+
+# CPU
+sketchybar --add item cpu right \
+  --set cpu \
+  update_freq=3 \
+  icon="⬡ " \
+  icon.color=$ACCENT \
+  label.color=$ACCENT \
+  icon.font="$FONT:Semibold:22.0" \
+  script="$PLUGIN_DIR/cpu.sh"
+
+# ──────────────────────────────────────────
+# FINALIZAR
+# ──────────────────────────────────────────
+sketchybar --update
