@@ -31,6 +31,8 @@ in
     openvpn
     tenv
     hcloud
+    yabai
+    skhd
   ];
 
   security.pam.services.sudo_local.touchIdAuth = true;
