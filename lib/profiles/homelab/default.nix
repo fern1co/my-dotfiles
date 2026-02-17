@@ -2,6 +2,9 @@
 { config, pkgs, lib, ... }:
 
 {
+  imports = [
+    ./sure.nix
+  ];
   # Docker for containerized services
   virtualisation.docker.enable = lib.mkForce true;
 
@@ -54,6 +57,16 @@
   services.firefly-iii = {
     enable = lib.mkDefault false;
     virtualHost = null;
+  };
+
+  # Sure personal finance app
+  services.sure = {
+    enable = lib.mkDefault false;
+    # Uncomment and configure when enabling:
+    # port = 3000;
+    # bind = "127.0.0.1";  # Use "0.0.0.0" to expose on all interfaces
+    # secretKeyBase = ""; # Generate with: openssl rand -hex 64
+    # assumeSsl = false;  # Set to true when using HTTPS reverse proxy
   };
 
   # Tailscale VPN

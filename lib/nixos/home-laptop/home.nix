@@ -1,5 +1,10 @@
 { lib,inputs,username }:{ pkgs, osConfig, ... }:
 {
+    imports = [
+      ./hyprland.nix
+      ./rofi.nix
+    ];
+
     home.stateVersion = "25.11";
 
     #gtk.catppuccin.enable = true;
@@ -99,6 +104,7 @@
       pkgs.swaynotificationcenter
       pkgs.rofi-systemd
       pkgs.rofi-power-menu
+      pkgs.albert
 
       pkgs.nerd-fonts.hack
       pkgs.nerd-fonts.fira-code
@@ -107,6 +113,143 @@
       #(pkgs.writeShellScriptBin "gemini-cli" ''
       #  exec ${pkgs.gemini-cli}/bin/gemini "$@"
       #'')
+
+      # tmux session manager (fzf)
+      (pkgs.writeShellScriptBin "tmux-sessionizer" ''
+        # tmux session manager - Muestra sesiones activas y directorios de proyectos
+
+        # Generar lista combinada
+        {
+          # Sesiones activas
+          ${pkgs.tmux}/bin/tmux list-sessions -F "#{session_name}" 2>/dev/null | while read -r session; do
+            echo "●|$session|"
+          done || true
+
+          # Directorios de proyectos
+          find ~/DevOps ~/development/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read -r dir; do
+            name=$(basename "$dir" | tr . _)
+
+            # Verificar si ya existe sesión
+            if ${pkgs.tmux}/bin/tmux has-session -t="$name" 2>/dev/null; then
+              echo "◉|$name|$dir"
+            else
+              echo "○|$name|$dir"
+            fi
+          done
+        } | awk -F'|' '
+          # Deduplicar: preferir entradas con path (◉ o ○ sobre ●)
+          {
+            key = $2
+            if (!seen[key] || $3 != "") {
+              entries[key] = $0
+              seen[key] = 1
+            }
+          }
+          END {
+            for (key in entries) print entries[key]
+          }
+        ' | sort -t'|' -k2 | ${pkgs.fzf}/bin/fzf --delimiter='|' --with-nth=1,2 --no-preview > /tmp/tmux-sel 2>/dev/null
+
+        # Leer selección
+        if [[ ! -s /tmp/tmux-sel ]]; then
+          rm -f /tmp/tmux-sel
+          exit 0
+        fi
+
+        selected=$(cat /tmp/tmux-sel)
+        rm -f /tmp/tmux-sel
+
+        # Parsear selección
+        IFS='|' read -r marker selected_name selected_path <<< "$selected"
+        selected_name=$(echo "$selected_name" | xargs)  # trim
+
+        # Crear sesión si es necesario
+        if [[ "$marker" == "○" && -n "$selected_path" ]]; then
+          if ! ${pkgs.tmux}/bin/tmux has-session -t="$selected_name" 2>/dev/null; then
+            ${pkgs.tmux}/bin/tmux new-session -ds "$selected_name" -c "$selected_path"
+          fi
+        fi
+
+        # Adjuntar o cambiar a la sesión
+        if [[ -z $TMUX ]]; then
+          ${pkgs.tmux}/bin/tmux attach-session -t "$selected_name"
+        else
+          ${pkgs.tmux}/bin/tmux switch-client -t "$selected_name"
+        fi
+      '')
+
+      # tmux session manager (rofi)
+      (pkgs.writeShellScriptBin "rofi-tmux" ''
+        # tmux session manager para rofi - Muestra sesiones activas y directorios de proyectos
+
+        # Generar lista combinada
+        list=$({
+          # Sesiones activas
+          ${pkgs.tmux}/bin/tmux list-sessions -F "#{session_name}" 2>/dev/null | while read -r session; do
+            echo "●|$session|"
+          done || true
+
+          # Directorios de proyectos
+          find ~/DevOps ~/development/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read -r dir; do
+            name=$(basename "$dir" | tr . _)
+
+            # Verificar si ya existe sesión
+            if ${pkgs.tmux}/bin/tmux has-session -t="$name" 2>/dev/null; then
+              echo "◉|$name|$dir"
+            else
+              echo "○|$name|$dir"
+            fi
+          done
+        } | awk -F'|' '
+          # Deduplicar: preferir entradas con path (◉ o ○ sobre ●)
+          {
+            key = $2
+            if (!seen[key] || $3 != "") {
+              entries[key] = $0
+              seen[key] = 1
+            }
+          }
+          END {
+            for (key in entries) print entries[key]
+          }
+        ' | sort -t'|' -k2)
+
+        # Formatear para rofi (mostrar solo marcador y nombre)
+        display_list=$(echo "$list" | awk -F'|' '{printf "%s %s\n", $1, $2}')
+
+        # Mostrar en rofi
+        selected=$(echo "$display_list" | ${pkgs.rofi}/bin/rofi -dmenu -i -p "tmux" -theme-str 'window {width: 40%;}')
+
+        if [[ -z "$selected" ]]; then
+          exit 0
+        fi
+
+        # Extraer nombre seleccionado (quitar marcador)
+        selected_name=$(echo "$selected" | awk '{print $2}')
+
+        # Buscar la entrada completa en la lista original
+        entry=$(echo "$list" | grep "|$selected_name|")
+        IFS='|' read -r marker name path <<< "$entry"
+
+        # Crear sesión si es necesario
+        if [[ "$marker" == "○" && -n "$path" ]]; then
+          if ! ${pkgs.tmux}/bin/tmux has-session -t="$selected_name" 2>/dev/null; then
+            ${pkgs.tmux}/bin/tmux new-session -ds "$selected_name" -c "$path"
+          fi
+        fi
+
+        # Determinar terminal a usar
+        terminal="''${TERMINAL:-${pkgs.kitty}/bin/kitty}"
+
+        # Lanzar terminal con tmux
+        if [[ -z $TMUX ]]; then
+          # No estamos en tmux, abrir terminal
+          $terminal -e ${pkgs.tmux}/bin/tmux attach-session -t "$selected_name" &
+        else
+          # Ya estamos en tmux, hacer switch
+          ${pkgs.tmux}/bin/tmux switch-client -t "$selected_name"
+        fi
+      '')
     ]; 
 
     services.darkman.enable = true;
@@ -151,6 +294,7 @@
     vim = "nvim";
     #gemini-cli = "gemini";
     ns = "nh os switch -H home_laptop";
+    tm = "tmux-sessionizer";
   };
 
   programs = {
@@ -185,7 +329,7 @@
         detect_urls = true;
         input_delay = 3;
         sync_to_monitor = true;
-        background_opacity = "0.8";
+        background_opacity = "0.5";
       }; 
       themeFile = "Catppuccin-Mocha";
     };
@@ -198,7 +342,7 @@
       oh-my-zsh = {
         enable = true;
         theme = "gnzh";
-        plugins = [ "git" "docker" "npm" "pip"];
+        plugins = [ "git" "docker" "npm"];
       };
     };
     tmux = {
@@ -242,13 +386,53 @@
     # Openclaw configuration
     openclaw = {
       enable = true;
+      documents = ./documents;
       systemd.enable = true;
-      firstParty = {
-        summarize.enable = true;
-        gogcli.enable = true;
+      bundledPlugins = {
+        summarize.enable = true;   # Summarize web pages, PDFs, videos
+        oracle.enable = false;     # Web search
+        sag.enable = false;        # Text-to-speech
+        #bird.enable = false;       # Twitter/X
       };
       # Define instance with config inside it
-      instances.default = {};
+      instances.default = {
+        enable = true;
+        package = pkgs.openclaw; # batteries-included
+        #stateDir = "~/.openclaw";
+        #workspaceDir = "~/.openclaw/workspace";
+        config = {
+          gateway = {
+            port = 18789;
+            mode = "local";
+            bind = "lan";
+            auth = {
+              mode = "token";
+              token = "15a11027bc806cfe37270478aae45e06f36190bdee8b30da";
+            };
+          };
+          channels = {
+            telegram = {
+              tokenFile = "/home/${username}/.secrets/telegram-bot-token";
+              allowFrom = [ 1202724286 ];
+            };
+            whatsapp = {
+              dmPolicy = "pairing";
+              selfChatMode= false;
+              groupAllowFrom = [
+                "120363182038570559@g.us"
+              ];
+              groupPolicy= "allowlist";
+              mediaMaxMb= 50;
+              groups = {
+                "120363182038570559@g.us" = {
+                  requireMention = true;
+                };
+              };
+              debounceMs= 0;
+            };
+          };
+        };
+      };
     };
 
     fzf = {

@@ -332,11 +332,6 @@ in
       voice = "en_US-arctic-medium";
       speaker = 2;
     };
-    principal2 = {
-      enable = true; 
-      uri = "tcp://0.0.0.0:10201";
-      voice = "en_US-amy-medium";
-    };
   };
 
   # ============================================================================

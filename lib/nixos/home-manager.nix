@@ -1,5 +1,7 @@
 {pkgs, ...}:
 {
+    home.stateVersion = "25.11";
+
     #gtk.catppuccin.enable = true;
     #gtk.catppuccin.flavor = "mocha";
     #gtk.catppuccin.icon.enable = true;
@@ -166,15 +168,11 @@
             timeout = 900; # 15min
             on-timeout = "hyprlock";
           }
-          {
-            timeout = 1800; # 30min
-            on-timeout = "hyprctl dispatch dpms off";
-            on-resume = "hyprctl dispatch dpms on";
-          }
-          {
-            timeout= 3000; # 60min
-            on-timeout= "systemctl suspend";
-          }
+          #{
+          #  timeout = 1800; # 30min
+          #  on-timeout = "hyprctl dispatch dpms off";
+          #  on-resume = "hyprctl dispatch dpms on";
+          #}
         ];
       };
     };
