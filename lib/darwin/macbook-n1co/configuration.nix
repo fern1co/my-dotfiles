@@ -25,7 +25,7 @@ in
   # Darwin-specific packages
   environment.systemPackages = with pkgs; [
     awscli
-    aerospace
+    #aerospace
     skhd
     sketchybar
     doppler
@@ -40,6 +40,7 @@ in
     gomplate
     yq-go
     packer
+    yabai
     (google-cloud-sdk.withExtraComponents (with pkgs.google-cloud-sdk.components; [
       gke-gcloud-auth-plugin
     ]))
@@ -52,7 +53,7 @@ in
   ids.gids.nixbld = 30000;
 
   services.aerospace = {
-        enable = true;
+        enable = false;
         settings = {
             default-root-container-layout = "tiles";
             default-root-container-orientation = "auto";
@@ -90,7 +91,7 @@ in
                 alt-w = "layout h_accordion"; # "layout tabbed" in i3
                 alt-e = "layout tiles horizontal vertical";
                 alt-shift-space = "layout floating tiling";
-                
+
                 alt-1 = "workspace 1";
                 alt-2 = "workspace 2";
                 alt-3 = "workspace 3";
@@ -127,31 +128,73 @@ in
         };
   };
 
+  # Habilitar yabai y skhd
+  services.yabai = {
+    enable = true;
+    package = pkgs.yabai;
+    enableScriptingAddition = true; # Requiere deshabilitar SIP
+    config = {
+      # Layout
+      layout = "bsp";
+
+      # Padding y gaps
+      top_padding    = 10;
+      bottom_padding = 10;
+      left_padding   = 10;
+      right_padding  = 10;
+      window_gap     = 10;
+
+      # Mouse
+      mouse_follows_focus = "off";
+      focus_follows_mouse = "off";
+      mouse_modifier = "fn";
+      mouse_action1 = "move";
+      mouse_action2 = "resize";
+      mouse_drop_action = "swap";
+
+      # Window
+      window_placement = "second_child";
+      window_opacity = "on";
+      active_window_opacity = "1.0";
+      normal_window_opacity = "0.95";
+      window_shadow = "float";
+
+      # Splits
+      split_ratio = "0.50";
+      auto_balance = "off";
+    };
+
+    extraConfig = ''
+      # Cargar scripting addition (necesario para space focus, window move, etc.)
+      sudo yabai --load-sa
+      yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+
+      yabai -m config external_bar all:40:0
+
+      # Reglas por aplicacion
+      yabai -m rule --add app="^Configuracion del Sistema$" manage=off
+      yabai -m rule --add app="^Calculator$" manage=off
+      yabai -m rule --add app="^Finder$" manage=off
+      yabai -m rule --add app="^Activity Monitor$" manage=off
+      yabai -m rule --add app="^1Password$" manage=off
+
+      # Aplicaciones que siempre flotan
+      yabai -m rule --add app="^Raycast$" manage=off
+      yabai -m rule --add title="^Preferences$" manage=off
+      yabai -m rule --add title="^Settings$" manage=off
+
+      # Borders (opcional, requiere borders plugin)
+      # borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0 &
+    '';
+  };
+
+  fonts.packages = with pkgs; [
+    jetbrains-mono
+  ];
+
   services.skhd.enable = true;
   services.sketchybar = {
-    enable = true; 
-    # config = ''
-
-    #   sketchybar --bar position=top height=32 blur_radius=30 color=0xcc161616 y_offset=5 notch_display_height=35 margin=5 corner_radius=5
-    #   default=(
-    #     padding_left=5
-    #     padding_right=5
-    #     icon.font="Hack Nerd Font:Bold:17.0"
-    #     label.font="Hack Nerd Font:Bold:14.0"
-    #     icon.color=0xffffffff
-    #     label.color=0xffffffff
-    #     icon.padding_left=4
-    #     icon.padding_right=4
-    #     label.padding_left=4
-    #     label.padding_right=4
-    #   )
-    #   sketchybar --default ${default[@]}
-
-
-    #   sketchybar --add item logo left \
-    #             --set logo update_freq=10 icon="" icon.padding_right=15 icon.padding_left=15 background.height=45 background.corner_radius=10 label.drawing=off icon.font.size=24 padding_left=0 padding_right=16
-
-    #   sketchybar --add event aerospace_workspace_change
-    # ''
+    enable = true;
+    package = pkgs.sketchybar;
   };
 }
