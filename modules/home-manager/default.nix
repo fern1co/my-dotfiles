@@ -10,5 +10,6 @@
   imports = [
     ./dev-environment.nix
     ./terminal.nix
+    ./tmux-sessionizer.nix
   ];
 }
