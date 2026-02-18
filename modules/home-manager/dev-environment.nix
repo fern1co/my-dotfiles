@@ -50,7 +50,7 @@ let
   # Tool category packages
   toolCategories = {
     vcs = with pkgs; [ git gh lazygit ];
-    editors = with pkgs; [ neovim ];
+    editors = []; # neovim managed via programs.neovim
     terminals = with pkgs; [ tmux ];
     utils = with pkgs; [ ripgrep fd jq yq-go bat eza fzf ];
     network = with pkgs; [ curl wget httpie ];

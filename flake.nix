@@ -49,6 +49,11 @@
                 system = "x86_64-darwin";
                 configPath = ./lib/darwin/configuration.nix;
             };
+            macbook-n1co = self.lib.mkDarwin{
+                system = "aarch64-darwin";
+                configPath = ./lib/darwin/macbook-n1co/configuration.nix;
+                username = "fernando.carbajal";
+            };
             macbook-pro = self.lib.mkDarwin {
                 system = "x86_64-darwin";
                 configPath = ./lib/darwin/macbook-pro/configuration.nix;

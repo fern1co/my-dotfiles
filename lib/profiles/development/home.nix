@@ -40,6 +40,7 @@
     bat.enable = true;
     lsd.enable = true;
     bottom.enable = true;
+    k9s.enable = true;
 
     zsh = {
       enable = true;

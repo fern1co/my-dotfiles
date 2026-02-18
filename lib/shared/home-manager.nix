@@ -16,7 +16,7 @@ in {
     enable = true;
 
     # Languages used in this environment
-    languages = [ "go" "rust" ];
+    languages = [ "go" "python" ];
 
     # Enable all tool categories
     tools = {
@@ -33,18 +33,17 @@ in {
       google-cloud-sdk
       google-chrome
       nss
-      dotnet
     ];
 
     # Project-specific aliases (module provides standard ones)
     shellAliases = {
-      "dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
-      "k9c" = "kubectl config get-contexts -o name | fzf | xargs -r k9s --context";
+      #"dotnet-ef" = "$HOME/.dotnet/tools/dotnet-ef";
+
     };
 
     # Project-specific session variables (module provides EDITOR, etc.)
     sessionVariables = {
-      DOTNET_ROOT = "${dotnet}";
+      # DOTNET_ROOT = "${dotnet}";
     };
 
     # Enable basic git config (extended below)
@@ -59,12 +58,12 @@ in {
       name = "Hack Nerd Font Propo";
       size = 14;
     };
-    opacity = 0.9;
+    opacity = 0.8;
     theme = "Catppuccin-Mocha";
     enableLigatures = true;
   };
 
-  home.stateVersion = "25.11";
+  #home.stateVersion = "25.11";
 
   # Catppuccin theme integration
   catppuccin.zsh-syntax-highlighting.enable = true;

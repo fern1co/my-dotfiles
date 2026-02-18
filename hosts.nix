@@ -164,6 +164,21 @@
       environment = "development";
       platform = "darwin";
     };
+    macbook-n1co = {
+      hostname = "localhost";
+      system = "aarch64-darwin";
+      username = "fernando.carbajal";
+
+      profiles = [
+        "base"
+        "development"
+      ];
+
+      role = "workstation";
+      environment = "development";
+      platform = "darwin";
+    };
+
 
     macbook-pro2 = {
       hostname = "localhost";

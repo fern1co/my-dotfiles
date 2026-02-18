@@ -12,10 +12,10 @@ let
   # Shared home-manager configuration imported by all systems
   # Pass the home-manager modules path to avoid relative path issues in flake evaluation
   homeManagerModulesPath = ../modules/home-manager;
-    #homeManagerShared = import ./shared/home-manager.nix {
-    #  inherit inputs;
-    #  homeManagerModules = homeManagerModulesPath;
-    #};
+  homeManagerShared = import ./shared/home-manager.nix {
+    inherit inputs;
+    homeManagerModules = homeManagerModulesPath;
+  };
 in
 {
 # mkDarwin: Creates a nix-darwin (macOS) system configuration
@@ -66,7 +66,7 @@ mkDarwin = {
               homeConfigPath = configDir + "/home.nix";
               hasHomeConfig = builtins.pathExists homeConfigPath;
             in {
-              home.stateVersion = "25.11";
+              home.stateVersion = "24.11";
 
               imports = [
                   # Catppuccin theming
@@ -75,7 +75,7 @@ mkDarwin = {
                   inputs.sops-nix.homeManagerModules.sops
                   # Shared home-manager configuration
                   inputs.nix-openclaw.homeManagerModules.openclaw
-                  # (homeManagerShared {inherit git;})
+                  (homeManagerShared {inherit git;})
               ] ++ (if hasHomeConfig
                     then [ (import homeConfigPath { inherit lib inputs username; }) ]
                     else []);
@@ -133,7 +133,7 @@ mkNixos = {
               homeConfigPath = configDir + "/home.nix";
               hasHomeConfig = builtins.pathExists homeConfigPath;
             in {
-              home.stateVersion = "25.11";
+              home.stateVersion = "24.11";
 
               imports = [
                 # Sops secrets for home-manager
