@@ -5,6 +5,11 @@
     ../../../modules/home-manager/tmux-sessionizer.nix
   ];
 
+  # Host-specific packages
+  home.packages = with pkgs; [
+    sqlcmd
+  ];
+
   # tmux session manager
   programs.tmuxSessionizer = {
     enable = true;
