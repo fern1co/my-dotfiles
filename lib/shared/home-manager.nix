@@ -140,6 +140,10 @@ in {
       single_window_margin_width = 4;
       mouse_hide_wait = 3;
       input_delay = 3;
+
+      # Remote control for opening new windows from skhd
+      allow_remote_control = "yes";
+      listen_on = "unix:/tmp/kitty";
     };
   };
 

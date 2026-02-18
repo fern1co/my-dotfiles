@@ -153,5 +153,18 @@
 
     # sketchybar
     ctrl + alt + cmd - b : sketchybar --reload
+
+    # ============================================
+    # APP LAUNCHERS - Abrir aplicaciones
+    # ============================================
+
+    # Nueva ventana de Kitty (reutiliza instancia existente)
+    alt - q : /bin/bash -c 'kitty --single-instance -d ~'
+
+    # Abrir Chrome
+    alt - w : open -a "Google Chrome"
+
+    # Abrir GitHub Desktop
+    alt - g : open -a "GitHub Desktop"
   '';
 }
