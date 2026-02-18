@@ -47,6 +47,7 @@ in
   ];
 
   security.pam.services.sudo_local.touchIdAuth = true;
+  security.pam.services.sudo_local.reattach = true;
 
   ids.gids.nixbld = 30000;
 
