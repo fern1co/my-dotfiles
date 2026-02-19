@@ -8,7 +8,17 @@
   # Host-specific packages
   home.packages = with pkgs; [
     sqlcmd
+    kubectx  # includes kubectx and kubens
   ];
+
+  # Kubernetes aliases
+  home.shellAliases = {
+    k = "kubectl";
+    kx = "kubectx";
+    kn = "kubens";
+    kpf = "kubectl port-forward";
+    k9c = "k9s --context $(kubectl config get-contexts -o name | fzf)";
+  };
 
   # tmux session manager
   programs.tmuxSessionizer = {
