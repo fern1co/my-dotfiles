@@ -58,6 +58,30 @@
     '';
   };
 
+  # Script para abrir ArgoCD con selector de instancia
+  home.file.".local/bin/argocd-launcher.sh" = {
+    executable = true;
+    text = ''
+      #!/bin/zsh
+      source ~/.zshrc
+
+      # Lista de instancias ArgoCD
+      instances=(
+        "argocd.cross.n1co.com"
+        "argocd-dev.cross-core.n1co.com"
+        "argocd-prd.cross-core.n1co.com"
+      )
+
+      # Seleccionar instancia con fzf
+      selected=$(printf '%s\n' "''${instances[@]}" | fzf --prompt="ArgoCD Instance: ")
+
+      # Si se seleccionó algo, abrir en Chrome
+      if [ -n "$selected" ]; then
+        open -na "Google Chrome" --args --new-window "https://$selected"
+      fi
+    '';
+  };
+
   # tmux session manager
   programs.tmuxSessionizer = {
     enable = true;
@@ -221,6 +245,9 @@
     alt - g : open -a "GitHub Desktop"
 
     # Abrir k9s con selector de contexto en space 3
-    cmd + alt - k : yabai -m space --focus 3 && /bin/zsh -lc 'kitty --title k9s -e ~/.local/bin/k9s-launcher.sh'
+    cmd + alt - k : yabai -m space --focus 3 && /bin/zsh -lc 'kitty --single-instance --title k9s -e ~/.local/bin/k9s-launcher.sh'
+
+    # Abrir ArgoCD con selector de instancia en Chrome
+    cmd + alt - a : /bin/zsh -lc 'kitty --single-instance --title argocd -e ~/.local/bin/argocd-launcher.sh'
   '';
 }

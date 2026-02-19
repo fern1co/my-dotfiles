@@ -188,6 +188,9 @@ in
 
       # k9s selector en floating centrado
       yabai -m rule --add title="k9s" manage=off grid=6:6:1:1:4:4
+
+      # argocd selector en floating centrado
+      yabai -m rule --add title="argocd" manage=off grid=6:6:1:1:4:4
     '';
   };
 
