@@ -185,6 +185,9 @@ in
 
       # Borders (opcional, requiere borders plugin)
       # borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0 &
+
+      # k9s selector en floating centrado
+      yabai -m rule --add title="k9s" manage=off grid=6:6:1:1:4:4
     '';
   };
 

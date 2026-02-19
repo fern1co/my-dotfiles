@@ -20,6 +20,44 @@
     k9c = "k9s --context $(kubectl config get-contexts -o name | fzf)";
   };
 
+  # Script para lanzar k9s con selector de contexto
+  home.file.".local/bin/k9s-launcher.sh" = {
+    executable = true;
+    text = ''
+      #!/bin/zsh
+      source ~/.zshrc
+      ctx=$(kubectl config get-contexts -o name | fzf)
+      if [ -n "$ctx" ]; then
+        yabai -m window --toggle float  # Quitar floating, pasar a tiled
+        k9s --context "$ctx"
+      fi
+    '';
+  };
+
+  # Script para lanzar kitty con tmux-sessionizer
+  home.file.".local/bin/kitty-tmux-launcher.sh" = {
+    executable = true;
+    text = ''
+      #!/bin/zsh
+      source ~/.zshrc
+
+      # Intentar tmux-sessionizer, capturar selección
+      selected=$(tmux-sessionizer 2>/dev/null)
+
+      # Si no hay selección (escape), preguntar por nueva sesión
+      if [ -z "$selected" ]; then
+        echo -n "Nombre de nueva sesión tmux (Enter para cancelar): "
+        read session_name
+        if [ -n "$session_name" ]; then
+          tmux new-session -s "$session_name" -c ~
+        else
+          # Si cancela, abrir shell normal
+          exec zsh
+        fi
+      fi
+    '';
+  };
+
   # tmux session manager
   programs.tmuxSessionizer = {
     enable = true;
@@ -173,13 +211,16 @@
     # APP LAUNCHERS - Abrir aplicaciones
     # ============================================
 
-    # Nueva ventana de Kitty (reutiliza instancia existente)
-    shift + alt - q : /bin/bash -c 'kitty --single-instance -d ~'
+    # Nueva ventana de Kitty con tmux-sessionizer
+    shift + alt - q : /bin/bash -c 'kitty --single-instance -e ~/.local/bin/kitty-tmux-launcher.sh'
 
-    # Abrir Chrome
-    alt - w : open -a "Google Chrome"
+    # Abrir nueva ventana de Chrome
+    alt - w : open -na "Google Chrome" --args --new-window
 
     # Abrir GitHub Desktop
     alt - g : open -a "GitHub Desktop"
+
+    # Abrir k9s con selector de contexto en space 3
+    cmd + alt - k : yabai -m space --focus 3 && /bin/zsh -lc 'kitty --title k9s -e ~/.local/bin/k9s-launcher.sh'
   '';
 }
