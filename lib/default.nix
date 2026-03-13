@@ -74,8 +74,7 @@ mkDarwin = {
                   # Sops secrets for home-manager
                   inputs.sops-nix.homeManagerModules.sops
                   # Shared home-manager configuration
-                  inputs.nix-openclaw.homeManagerModules.openclaw
-                  (homeManagerShared {inherit git;})
+                  # (homeManagerShared {inherit git;})
               ] ++ (if hasHomeConfig
                     then [ (import homeConfigPath { inherit lib inputs username; }) ]
                     else []);
@@ -140,8 +139,6 @@ mkNixos = {
                 inputs.sops-nix.homeManagerModules.sops
                 # Catppuccin theming
                 inputs.catppuccin.homeModules.catppuccin
-                # Nix-openclaw home-manager module
-                inputs.nix-openclaw.homeManagerModules.openclaw
                 # Shared home-manager configuration
                 # (homeManagerShared {inherit git;})
               ] ++ (if hasHomeConfig

@@ -27,7 +27,6 @@ in
   # Import custom package overlays
   nixpkgs.overlays = [
     (import ../../packages/overlay.nix)
-    inputs.nix-openclaw.overlays.default
     # Fix for jaraco-test build failure
   ];
 
@@ -126,7 +125,8 @@ in
     nss.tools
     openjdk
     wavemon
-    gparted
+    statix
+    nil
 
     # Python for home automation
     #python310
@@ -146,6 +146,7 @@ in
 
     # DEPLOY TOOLS
     tenv
+    gcloud
     hcloud
     k9s
     kubectl
@@ -243,7 +244,7 @@ in
       "webostv" "ipp" "nmap_tracker" "local_todo"
       "manual_mqtt" "apple_tv" "mqtt" "google" "google_cloud" "workday"
       "wyoming" "piper" "mealie" "tailscale" "xiaomi_ble" "androidtv" "youtube" "homekit_controller" "kegtron" "github"
-      "music_assistant"
+      "music_assistant" "mcp_server"
     ];
   };
 
@@ -329,8 +330,7 @@ in
     principal = {
       enable = true;
       uri = "tcp://0.0.0.0:10200";
-      voice = "en_US-arctic-medium";
-      speaker = 2;
+      voice = "es_AR-daniela-high";
     };
   };
 

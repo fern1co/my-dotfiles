@@ -7,6 +7,7 @@
     ];
 
     home.stateVersion = "25.11";
+    home.sessionPath = [ "$HOME/.npm-global/bin" ];
 
     #gtk.catppuccin.enable = true;
     #gtk.catppuccin.flavor = "mocha";
@@ -109,11 +110,6 @@
 
       pkgs.nerd-fonts.hack
       pkgs.nerd-fonts.fira-code
-
-      ## Wrapper for openclaw compatibility (openclaw looks for gemini-cli)
-      #(pkgs.writeShellScriptBin "gemini-cli" ''
-      #  exec ${pkgs.gemini-cli}/bin/gemini "$@"
-      #'')
     ]; 
 
     services.darkman.enable = true;
@@ -254,57 +250,6 @@
         bind -r K resize-pane -U 2
         bind -r L resize-pane -R 2
       '';
-    };
-    # Openclaw configuration
-    openclaw = {
-      enable = true;
-      documents = ./documents;
-      systemd.enable = true;
-      bundledPlugins = {
-        summarize.enable = true;   # Summarize web pages, PDFs, videos
-        oracle.enable = false;     # Web search
-        sag.enable = false;        # Text-to-speech
-        #bird.enable = false;       # Twitter/X
-      };
-      # Define instance with config inside it
-      instances.default = {
-        enable = true;
-        package = pkgs.openclaw; # batteries-included
-        #stateDir = "~/.openclaw";
-        #workspaceDir = "~/.openclaw/workspace";
-        config = {
-          gateway = {
-            port = 18789;
-            mode = "local";
-            bind = "lan";
-            auth = {
-              mode = "token";
-              token = "15a11027bc806cfe37270478aae45e06f36190bdee8b30da";
-            };
-          };
-          channels = {
-            telegram = {
-              tokenFile = "/home/${username}/.secrets/telegram-bot-token";
-              allowFrom = [ 1202724286 ];
-            };
-            whatsapp = {
-              dmPolicy = "pairing";
-              selfChatMode= false;
-              groupAllowFrom = [
-                "120363182038570559@g.us"
-              ];
-              groupPolicy= "allowlist";
-              mediaMaxMb= 50;
-              groups = {
-                "120363182038570559@g.us" = {
-                  requireMention = true;
-                };
-              };
-              debounceMs= 0;
-            };
-          };
-        };
-      };
     };
 
     fzf = {
