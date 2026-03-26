@@ -93,6 +93,14 @@
       esphome = true;
       mealie = true;
       tailscale = true;
+      # Arr stack - media management
+      sonarr = true;
+      radarr = true;
+      prowlarr = true;
+      bazarr = true;
+      jellyfin = true;
+      transmission = true;
+      jellyseerr = true;
     };
 
     # Keyboard layout

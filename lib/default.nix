@@ -66,7 +66,7 @@ mkDarwin = {
               homeConfigPath = configDir + "/home.nix";
               hasHomeConfig = builtins.pathExists homeConfigPath;
             in {
-              home.stateVersion = "24.11";
+              #home.stateVersion = "24.11";
 
               imports = [
                   # Catppuccin theming
@@ -132,7 +132,7 @@ mkNixos = {
               homeConfigPath = configDir + "/home.nix";
               hasHomeConfig = builtins.pathExists homeConfigPath;
             in {
-              home.stateVersion = "24.11";
+              #home.stateVersion = "24.11";
 
               imports = [
                 # Sops secrets for home-manager

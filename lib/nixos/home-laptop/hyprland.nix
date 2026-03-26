@@ -30,6 +30,7 @@
       # Autostart
       exec-once = [
         "~/.config/hypr/scripts/wallpaper-autochange.sh"
+        "waybar"
       ];
 
       # General settings
@@ -160,6 +161,9 @@
         "suppressevent maximize, class:.*"
         "opacity 0.8 0.8,class:^(kitty)$"
         "nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
+        "float, class:^(albert)$"
+        "center, class:^(albert)$"
+        "focus, class:^(albert)$"
       ];
 
       # Keybindings
@@ -177,11 +181,13 @@
 
         # Launch applications
         "$mainMod, Q, exec, $terminal"
+        "$mainMod, Return, exec, $terminal -e tmux-sessionizer"
         "$mainMod, C, killactive,"
         "$mainMod, W, exec, $browser"
         "$mainMod, E, exec, $fileManager"
         "$mainMod, V, togglefloating,"
         "$mainMod, R, exec, $menu"
+        "$mainMod, A, exec, albert toggle"
         "$mainMod, P, pseudo,"
 
         # Focus movement
@@ -235,8 +241,8 @@
         "$mainMod SHIFT, S, movetoworkspace, special:magic"
 
         # Custom scripts
-        "$mainMod SHIFT, B, exec, ~/.config/waybar/launch.sh"
-        "$mainMod CTRL, B, exec, ~/.config/waybar/toggle.sh"
+        "$mainMod SHIFT, B, exec, pkill waybar; waybar"
+        "$mainMod CTRL, B, exec, pkill -SIGUSR1 waybar"
         "$mainMod CTRL, W, exec, ~/.config/hypr/scripts/waypaper.sh"
         "$mainMod SHIFT, T, exec, rofi-tmux"
 
@@ -268,6 +274,7 @@
         "$mainMod, mouse:273, resizewindow"
       ];
     };
+
   };
 
   # Scripts for Hyprland

@@ -3,6 +3,7 @@
     imports = [
       ./hyprland.nix
       ./rofi.nix
+      ./waybar.nix
       ../../../modules/home-manager/tmux-sessionizer.nix
     ];
 

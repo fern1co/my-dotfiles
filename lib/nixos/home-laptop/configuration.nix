@@ -80,11 +80,16 @@ in
   users.users.${username} = {
     isNormalUser = true;
     home = "/home/${username}";
+    homeMode = "711";
     extraGroups = [ "wheel" "docker" "video" "audio" "pipewire" ];
     shell = pkgs.zsh;
   };
 
   users.extraGroups.video.members = [ "frigate" "${username}" ];
+
+  # Media group for arr stack services
+  users.groups.media = {};
+  users.groups.media.members = [ username "sonarr" "radarr" "bazarr" "jellyfin" "transmission" ];
 
   # Caddy user for homelab services
   users.users.caddy = {
@@ -146,7 +151,7 @@ in
 
     # DEPLOY TOOLS
     tenv
-    gcloud
+    #gcloud
     hcloud
     k9s
     kubectl
@@ -252,6 +257,13 @@ in
     "d /var/lib/hass 0755 hass hass -"
     "d /var/lib/hass/custom_components 0755 hass hass -"
     "d /var/lib/hass/.storage 0755 hass hass -"
+    # Media directories for arr stack
+    "d /home/${username}/media 0775 ${username} media -"
+    "d /home/${username}/media/movies 0775 ${username} media -"
+    "d /home/${username}/media/series 0775 ${username} media -"
+    "d /home/${username}/media/downloads 0775 ${username} media -"
+    "d /home/${username}/media/downloads/complete 0775 ${username} media -"
+    "d /home/${username}/media/downloads/incomplete 0775 ${username} media -"
   ];
   
   systemd.services.home-assistant.serviceConfig = {
@@ -276,14 +288,72 @@ in
   };
 
   # ============================================================================
+  # ARR STACK - Media Management
+  # ============================================================================
+
+  services.flaresolverr = {
+    enable = true;
+    openFirewall = false;
+  };
+
+  services.prowlarr = lib.mkIf (hostConfig.features.prowlarr or false) {
+    enable = true;
+    openFirewall = false;
+  };
+
+  services.sonarr = lib.mkIf (hostConfig.features.sonarr or false) {
+    enable = true;
+    openFirewall = false;
+  };
+
+  services.radarr = lib.mkIf (hostConfig.features.radarr or false) {
+    enable = true;
+    openFirewall = false;
+  };
+
+  services.bazarr = lib.mkIf (hostConfig.features.bazarr or false) {
+    enable = true;
+    openFirewall = false;
+  };
+
+  services.jellyfin = lib.mkIf (hostConfig.features.jellyfin or false) {
+    enable = true;
+    openFirewall = false;
+  };
+
+  services.jellyseerr = lib.mkIf (hostConfig.features.jellyseerr or false) {
+    enable = true;
+    openFirewall = false;
+    port = 5055;
+  };
+
+  services.transmission = lib.mkIf (hostConfig.features.transmission or false) {
+    enable = true;
+    openFirewall = false;
+    settings = {
+      download-dir = "/home/${username}/media/downloads/complete";
+      incomplete-dir = "/home/${username}/media/downloads/incomplete";
+      incomplete-dir-enabled = true;
+      rpc-bind-address = "0.0.0.0";
+      rpc-port = 9091;
+      rpc-whitelist-enabled = false;
+      rpc-host-whitelist-enabled = false;
+      rpc-authentication-required = false;
+      umask = 2;
+      seed-ratio-limit = 0.0001;
+      seed-ratio-limited = true;
+    };
+  };
+
+  # ============================================================================
   # CADDY WEB SERVER
   # ============================================================================
 
   services.caddy = lib.mkIf (hostConfig.features.caddy or false) {
-    enable = false;
+    enable = true;
     user = "caddy";
     group = "caddy";
-    virtualHosts = {
+    virtualHosts = lib.optionalAttrs config.services.firefly-iii.enable {
       "finance.f3rock.local" = {
         extraConfig = ''
           root * ${config.services.firefly-iii.package}/public
@@ -293,6 +363,7 @@ in
           tls internal
         '';
       };
+    } // {
       "ha.${config.networking.hostName}.tail337b8f.ts.net" = {
         extraConfig = "reverse_proxy 127.0.0.1:8123";
       };
@@ -307,6 +378,28 @@ in
           tls internal
           respond "Hello, world!"
         '';
+      };
+      # Arr stack virtual hosts (HTTP only - internal network)
+      "http://sonarr.f3rock.local" = {
+        extraConfig = "reverse_proxy localhost:8989";
+      };
+      "http://radarr.f3rock.local" = {
+        extraConfig = "reverse_proxy localhost:7878";
+      };
+      "http://prowlarr.f3rock.local" = {
+        extraConfig = "reverse_proxy localhost:9696";
+      };
+      "http://bazarr.f3rock.local" = {
+        extraConfig = "reverse_proxy localhost:6767";
+      };
+      "http://jellyfin.f3rock.local" = {
+        extraConfig = "reverse_proxy localhost:8096";
+      };
+      "http://transmission.f3rock.local" = {
+        extraConfig = "reverse_proxy localhost:9091";
+      };
+      "http://jellyseerr.f3rock.local" = {
+        extraConfig = "reverse_proxy localhost:5055";
       };
     };
   };
@@ -402,6 +495,110 @@ in
     caddy.after = ["tailscale.service"];
     caddy.path = with pkgs; [ sudo coreutils nss.tools ];
     caddy.environment.JAVA_HOME = "${pkgs.openjdk}/lib/openjdk";
+    sonarr.serviceConfig.SupplementaryGroups = [ "media" ];
+    radarr.serviceConfig.SupplementaryGroups = [ "media" ];
+    bazarr.serviceConfig.SupplementaryGroups = [ "media" ];
+    jellyfin.serviceConfig.SupplementaryGroups = [ "media" ];
+    transmission.serviceConfig.SupplementaryGroups = [ "media" ];
+
+    arr-cleanup = {
+      description = "Delete watched media older than 30 days";
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        ExecStart = pkgs.writeShellScript "arr-cleanup" ''
+          set -euo pipefail
+
+          JELLYFIN_URL="http://localhost:8096"
+          RADARR_URL="http://localhost:7878"
+          SONARR_URL="http://localhost:8989"
+          DAYS=30
+
+          JELLYFIN_KEY_FILE="/etc/arr-stack/jellyfin-api-key"
+          RADARR_KEY_FILE="/etc/arr-stack/radarr-api-key"
+          SONARR_KEY_FILE="/etc/arr-stack/sonarr-api-key"
+
+          if [[ ! -f "$JELLYFIN_KEY_FILE" ]]; then
+            echo "Missing $JELLYFIN_KEY_FILE — skipping cleanup"
+            exit 0
+          fi
+
+          JELLYFIN_KEY=$(cat "$JELLYFIN_KEY_FILE")
+          RADARR_KEY=$(cat "$RADARR_KEY_FILE" 2>/dev/null || echo "")
+          SONARR_KEY=$(cat "$SONARR_KEY_FILE" 2>/dev/null || echo "")
+          THRESHOLD=$(date -d "-$DAYS days" --iso-8601=seconds)
+
+          echo "=== arr-cleanup: deleting watched media older than $DAYS days ==="
+
+          # ---- MOVIES ----
+          echo "-- Movies --"
+          ${pkgs.curl}/bin/curl -sf \
+            "$JELLYFIN_URL/Items?IncludeItemTypes=Movie&IsPlayed=true&Recursive=true&Fields=Path,UserData,Id,Name" \
+            -H "X-Emby-Token: $JELLYFIN_KEY" | \
+          ${pkgs.jq}/bin/jq -r --arg threshold "$THRESHOLD" \
+            '.Items[] | select(.UserData.LastPlayedDate != null) |
+             select(.UserData.LastPlayedDate < $threshold) |
+             [.Id, .Name, (.Path // "")] | @tsv' | \
+          while IFS=$'\t' read -r jf_id name path; do
+            if [[ -z "$path" || ! -f "$path" ]]; then
+              echo "SKIP (no file): $name"
+              continue
+            fi
+            echo "DELETE movie: $name ($path)"
+            rm -f "$path"
+            rmdir "$(dirname "$path")" 2>/dev/null || true
+            if [[ -n "$RADARR_KEY" ]]; then
+              radarr_id=$(${pkgs.curl}/bin/curl -sf \
+                "$RADARR_URL/api/v3/movie?apikey=$RADARR_KEY" | \
+                ${pkgs.jq}/bin/jq -r --arg title "$name" \
+                  '.[] | select(.title == $title) | .id' | head -1)
+              if [[ -n "$radarr_id" ]]; then
+                ${pkgs.curl}/bin/curl -sf -X POST \
+                  "$RADARR_URL/api/v3/command?apikey=$RADARR_KEY" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"name\":\"RescanMovie\",\"movieId\":$radarr_id}" > /dev/null
+              fi
+            fi
+          done
+
+          # ---- EPISODES ----
+          echo "-- Episodes --"
+          ${pkgs.curl}/bin/curl -sf \
+            "$JELLYFIN_URL/Items?IncludeItemTypes=Episode&IsPlayed=true&Recursive=true&Fields=Path,UserData,SeriesName" \
+            -H "X-Emby-Token: $JELLYFIN_KEY" | \
+          ${pkgs.jq}/bin/jq -r --arg threshold "$THRESHOLD" \
+            '.Items[] | select(.UserData.LastPlayedDate != null) |
+             select(.UserData.LastPlayedDate < $threshold) |
+             [.SeriesName, (.Path // "")] | @tsv' | \
+          while IFS=$'\t' read -r series_name path; do
+            if [[ -z "$path" || ! -f "$path" ]]; then
+              echo "SKIP (no file): $series_name"
+              continue
+            fi
+            echo "DELETE episode: $series_name ($path)"
+            rm -f "$path"
+            rmdir "$(dirname "$path")" 2>/dev/null || true
+          done
+
+          if [[ -n "$SONARR_KEY" ]]; then
+            ${pkgs.curl}/bin/curl -sf -X POST \
+              "$SONARR_URL/api/v3/command?apikey=$SONARR_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"name":"RescanSeries"}' > /dev/null
+          fi
+
+          echo "=== arr-cleanup done ==="
+        '';
+      };
+    };
+  };
+
+  systemd.timers.arr-cleanup = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+    };
   };
 
   # ============================================================================
@@ -420,8 +617,13 @@ in
   # ============================================================================
 
   networking.firewall = {
-    allowedTCPPorts = [ 22 53 853 443 8081 8123 80 8080 8083 8084 8085 8095 8097 25565 25575 18789];
-    allowedUDPPorts = [ 53 67 68 853 546 547 25565 25575 18789];
+    allowedTCPPorts = [ 22 53 853 443 8081 8123 80 8080 8083 8084 8085 8095 8097 25565 25575 18789
+      # Arr stack
+      7878 8989 9696 6767 8096 9091 51413 5055
+    ];
+    allowedUDPPorts = [ 53 67 68 853 546 547 25565 25575 18789
+      51413 # Transmission torrents
+    ];
     trustedInterfaces = ["tailscale0"];
     checkReversePath = "loose";
   };
